@@ -1,0 +1,31 @@
+# Claim Management System
+
+Internal hospital claim management platform.
+
+## Tech Stack
+
+- Node.js
+- Express
+- TypeScript
+- MongoDB
+- React
+- Vite
+- Tailwind
+- pnpm Monorepo
+
+## Architecture
+
+- Modular Monolith
+- Domain-driven modules
+- Monorepo workspace
+
+## Modules
+
+- Auth
+- Claims
+- Patients
+- Insurance
+- TPA
+- Documents
+- Payments
+- Settlements

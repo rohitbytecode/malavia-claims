@@ -1,0 +1,37 @@
+# dependencies
+node_modules
+
+# builds
+dist
+build
+coverage
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+logs
+*.log
+pnpm-debug.log*
+
+# turbo
+.turbo
+
+# vite
+vite.svg
+
+# uploads
+uploads
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+
+# typescript
+*.tsbuildinfo
