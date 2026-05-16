@@ -45,4 +45,5 @@ const depositSchema = new mongoose.Schema<DepositDocument>(
 );
 
 export const DepositModel =
-  mongoose.models.Deposit || mongoose.model<DepositDocument>("Deposit", depositSchema);
+  mongoose.models.Deposit ||
+  mongoose.model<DepositDocument>("Deposit", depositSchema);

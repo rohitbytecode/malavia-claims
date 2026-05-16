@@ -7,7 +7,7 @@ interface InsuranceCompanyFilters {
 
 export class InsuranceCompanyRepository {
   static async createInsuranceCompany(
-    payload: Partial<InsuranceCompanyDocument>,
+    payload: Partial<InsuranceCompanyDocument>
   ) {
     return InsuranceCompanyModel.create(payload);
   }
@@ -23,7 +23,7 @@ export class InsuranceCompanyRepository {
   static async listInsuranceCompanies(
     filters: InsuranceCompanyFilters,
     page: number,
-    limit: number,
+    limit: number
   ) {
     const query: Record<string, unknown> = {};
 
@@ -40,7 +40,7 @@ export class InsuranceCompanyRepository {
 
   static async updateInsuranceCompany(
     companyId: string,
-    update: Partial<InsuranceCompanyDocument>,
+    update: Partial<InsuranceCompanyDocument>
   ) {
     return InsuranceCompanyModel.findByIdAndUpdate(companyId, update, {
       new: true,

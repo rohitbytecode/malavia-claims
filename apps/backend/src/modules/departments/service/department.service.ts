@@ -27,12 +27,12 @@ export class DepartmentService {
   static async listDepartments(
     isActive: boolean | undefined,
     page: number,
-    limit: number,
+    limit: number
   ) {
     const departments = await DepartmentRepository.listDepartments(
       { isActive },
       page,
-      limit,
+      limit
     );
 
     return departments.map(toDepartmentResponse);
@@ -50,7 +50,7 @@ export class DepartmentService {
 
   static async updateDepartment(
     departmentId: string,
-    payload: UpdateDepartmentPayload,
+    payload: UpdateDepartmentPayload
   ) {
     const updatePayload: Partial<DepartmentDocument> = {};
 
@@ -72,7 +72,7 @@ export class DepartmentService {
 
     const department = await DepartmentRepository.updateDepartment(
       departmentId,
-      updatePayload,
+      updatePayload
     );
 
     if (!department) {

@@ -49,7 +49,7 @@ const documentSchema = new mongoose.Schema<DocumentDocument>(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const DocumentModel =

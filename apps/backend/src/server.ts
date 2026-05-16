@@ -16,7 +16,7 @@ const startServer = async () => {
 
   const gracefulShutdown = async (signal: string) => {
     logger.info(`Received ${signal}. Shutting down gracefully...`);
-    
+
     server.close(async () => {
       logger.info("HTTP server closed.");
       try {
@@ -31,7 +31,9 @@ const startServer = async () => {
 
     // Force close after 10 seconds
     setTimeout(() => {
-      logger.error("Could not close connections in time, forcefully shutting down");
+      logger.error(
+        "Could not close connections in time, forcefully shutting down"
+      );
       process.exit(1);
     }, 10000);
   };

@@ -12,7 +12,11 @@ export class NotificationController {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
 
-    const data = await NotificationService.getUserNotifications(userId, page, limit);
+    const data = await NotificationService.getUserNotifications(
+      userId,
+      page,
+      limit
+    );
 
     return res.status(200).json({
       success: true,
@@ -25,7 +29,10 @@ export class NotificationController {
     const userId = (req as any).user?.userId;
     const { notificationId } = req.params;
 
-    const notification = await NotificationService.markAsRead(notificationId as string, userId);
+    const notification = await NotificationService.markAsRead(
+      notificationId as string,
+      userId
+    );
 
     return res.status(200).json({
       success: true,

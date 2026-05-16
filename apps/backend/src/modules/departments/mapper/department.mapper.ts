@@ -1,7 +1,7 @@
 import { DepartmentDocument } from "@/modules/departments/types/department.types.js";
 
 export const toDepartmentResponse = (
-  department: Partial<DepartmentDocument>,
+  department: Partial<DepartmentDocument>
 ) => {
   return {
     id: department._id?.toString() ?? null,

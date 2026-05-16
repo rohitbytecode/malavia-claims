@@ -11,7 +11,7 @@ export class DashboardService {
     const pendingPreauthCount = await ClaimModel.countDocuments({
       status: ClaimStatus.PREAUTH_PENDING,
     });
-    
+
     const pendingFinalApprovalCount = await ClaimModel.countDocuments({
       status: ClaimStatus.FINAL_APPROVAL_PENDING,
     });
@@ -49,7 +49,8 @@ export class DashboardService {
     const totalSettledResult = await SettlementModel.aggregate([
       { $group: { _id: null, total: { $sum: "$approvedAmount" } } },
     ]);
-    const totalSettledAmount = totalSettledResult.length > 0 ? totalSettledResult[0].total : 0;
+    const totalSettledAmount =
+      totalSettledResult.length > 0 ? totalSettledResult[0].total : 0;
 
     // 6. Claims by Status
     const claimsByStatus = await ClaimModel.aggregate([
@@ -61,10 +62,18 @@ export class DashboardService {
     const days90Ago = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
     const ageingSummary = {
-      under30Days: await ClaimModel.countDocuments({ createdAt: { $gt: days30Ago } }),
-      between30And60Days: await ClaimModel.countDocuments({ createdAt: { $lte: days30Ago, $gt: days60Ago } }),
-      between60And90Days: await ClaimModel.countDocuments({ createdAt: { $lte: days60Ago, $gt: days90Ago } }),
-      over90Days: await ClaimModel.countDocuments({ createdAt: { $lte: days90Ago } }),
+      under30Days: await ClaimModel.countDocuments({
+        createdAt: { $gt: days30Ago },
+      }),
+      between30And60Days: await ClaimModel.countDocuments({
+        createdAt: { $lte: days30Ago, $gt: days60Ago },
+      }),
+      between60And90Days: await ClaimModel.countDocuments({
+        createdAt: { $lte: days60Ago, $gt: days90Ago },
+      }),
+      over90Days: await ClaimModel.countDocuments({
+        createdAt: { $lte: days90Ago },
+      }),
     };
 
     return {
@@ -82,7 +91,10 @@ export class DashboardService {
       financials: {
         totalSettledAmount,
       },
-      claimsByStatus: claimsByStatus.map(s => ({ status: s._id, count: s.count })),
+      claimsByStatus: claimsByStatus.map((s) => ({
+        status: s._id,
+        count: s.count,
+      })),
       ageingSummary,
     };
   }

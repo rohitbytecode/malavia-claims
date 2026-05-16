@@ -17,7 +17,10 @@ export class DepositRepository {
     return DepositModel.findById(depositId);
   }
 
-  static async updateDeposit(depositId: string, updates: Partial<DepositDocument>) {
+  static async updateDeposit(
+    depositId: string,
+    updates: Partial<DepositDocument>
+  ) {
     return DepositModel.findByIdAndUpdate(depositId, updates, { new: true });
   }
 }

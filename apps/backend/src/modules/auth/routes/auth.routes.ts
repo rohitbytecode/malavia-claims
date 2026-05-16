@@ -12,12 +12,12 @@ const router = Router();
 router.post(
   "/login",
   validate(loginSchema),
-  asyncHandler(AuthController.login),
+  asyncHandler(AuthController.login)
 );
 router.post(
   "/refresh",
   validate(refreshTokenSchema),
-  asyncHandler(AuthController.refreshToken),
+  asyncHandler(AuthController.refreshToken)
 );
 
 export default router;

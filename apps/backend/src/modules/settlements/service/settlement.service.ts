@@ -19,7 +19,9 @@ interface CreateSettlementParams {
 
 export class SettlementService {
   static async createSettlement(params: CreateSettlementParams) {
-    const existing = await SettlementRepository.findSettlementByClaimId(params.claimId);
+    const existing = await SettlementRepository.findSettlementByClaimId(
+      params.claimId
+    );
     if (existing) {
       throw new AppError("Settlement already exists for this claim", 400);
     }
@@ -29,7 +31,8 @@ export class SettlementService {
     const deductions = params.deductions ?? 0;
     const tds = params.tds ?? 0;
 
-    const netPayable = params.approvedAmount - hospitalDiscount - deductions - tds;
+    const netPayable =
+      params.approvedAmount - hospitalDiscount - deductions - tds;
 
     if (netPayable < 0) {
       throw new AppError("Net payable amount cannot be negative", 400);
@@ -47,7 +50,9 @@ export class SettlementService {
       settledBy: new Types.ObjectId(params.settledBy),
     };
 
-    const settlement = await SettlementRepository.createSettlement(settlementPayload as any);
+    const settlement = await SettlementRepository.createSettlement(
+      settlementPayload as any
+    );
 
     await AuditLogService.logAction({
       module: AuditModule.SETTLEMENTS,
@@ -61,7 +66,8 @@ export class SettlementService {
   }
 
   static async getSettlementByClaimId(claimId: string) {
-    const settlement = await SettlementRepository.findSettlementByClaimId(claimId);
+    const settlement =
+      await SettlementRepository.findSettlementByClaimId(claimId);
     if (!settlement) {
       throw new AppError("Settlement not found for this claim", 404);
     }

@@ -24,7 +24,7 @@ export const documentStorage = multer.diskStorage({
 export const documentFileFilter: multer.Options["fileFilter"] = (
   _: Express.Request,
   file: Express.Multer.File,
-  callback,
+  callback
 ) => {
   if (!file.mimetype) {
     return callback(new Error("Unsupported file type"));

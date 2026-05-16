@@ -22,16 +22,28 @@ export class AuditLogService {
     }
   }
 
-  static async fetchEntityHistory(entityId: string, page: number = 1, limit: number = 20) {
+  static async fetchEntityHistory(
+    entityId: string,
+    page: number = 1,
+    limit: number = 20
+  ) {
     if (!entityId) {
       throw new AppError("Entity ID is required", 400);
     }
 
-    const logs = await AuditLogRepository.getLogsByEntity(entityId, page, limit);
+    const logs = await AuditLogRepository.getLogsByEntity(
+      entityId,
+      page,
+      limit
+    );
     return logs;
   }
 
-  static async fetchModuleHistory(module: AuditModule, page: number = 1, limit: number = 20) {
+  static async fetchModuleHistory(
+    module: AuditModule,
+    page: number = 1,
+    limit: number = 20
+  ) {
     const logs = await AuditLogRepository.getLogsByModule(module, page, limit);
     return logs;
   }

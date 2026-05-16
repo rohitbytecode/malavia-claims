@@ -61,7 +61,9 @@ export const checkPendingSettlements = async () => {
 export const checkPendingRefunds = async () => {
   const pendingDeposits = await DepositModel.find({
     refundStatus: RefundStatus.PENDING,
-  }).populate("claimId").lean();
+  })
+    .populate("claimId")
+    .lean();
 
   for (const deposit of pendingDeposits) {
     if (deposit.claimId) {

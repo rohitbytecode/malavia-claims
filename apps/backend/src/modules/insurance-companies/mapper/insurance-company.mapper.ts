@@ -1,7 +1,7 @@
 import { InsuranceCompanyDocument } from "@/modules/insurance-companies/types/insurance-company.types.js";
 
 export const toInsuranceCompanyResponse = (
-  company: Partial<InsuranceCompanyDocument>,
+  company: Partial<InsuranceCompanyDocument>
 ) => {
   return {
     id: company._id?.toString() ?? null,

@@ -16,13 +16,13 @@ router.post(
   authenticate,
   uploadDocumentMiddleware,
   validate(uploadDocumentSchema),
-  asyncHandler(DocumentController.uploadDocument),
+  asyncHandler(DocumentController.uploadDocument)
 );
 router.get(
   "/",
   authenticate,
   validate(getDocumentsSchema),
-  asyncHandler(DocumentController.listDocuments),
+  asyncHandler(DocumentController.listDocuments)
 );
 
 export default router;

@@ -14,11 +14,17 @@ export class NotificationRepository {
     return NotificationModel.create({
       ...payload,
       userId: new Types.ObjectId(payload.userId),
-      entityId: payload.entityId ? new Types.ObjectId(payload.entityId) : undefined,
+      entityId: payload.entityId
+        ? new Types.ObjectId(payload.entityId)
+        : undefined,
     });
   }
 
-  static async getUserNotifications(userId: string, page: number, limit: number) {
+  static async getUserNotifications(
+    userId: string,
+    page: number,
+    limit: number
+  ) {
     return NotificationModel.find({ userId: new Types.ObjectId(userId) })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -35,7 +41,10 @@ export class NotificationRepository {
 
   static async markAsRead(notificationId: string, userId: string) {
     return NotificationModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(notificationId), userId: new Types.ObjectId(userId) },
+      {
+        _id: new Types.ObjectId(notificationId),
+        userId: new Types.ObjectId(userId),
+      },
       { isRead: true, readAt: new Date() },
       { new: true }
     );

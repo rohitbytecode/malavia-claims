@@ -26,7 +26,7 @@ interface UpdateInsuranceCompanyPayload extends Partial<CreateInsuranceCompanyPa
 export class InsuranceCompanyService {
   static async createInsuranceCompany(payload: CreateInsuranceCompanyPayload) {
     const existingCompany = await InsuranceCompanyRepository.findByName(
-      payload.name,
+      payload.name
     );
 
     if (existingCompany) {
@@ -56,12 +56,12 @@ export class InsuranceCompanyService {
   static async listInsuranceCompanies(
     isActive: boolean | undefined,
     page: number,
-    limit: number,
+    limit: number
   ) {
     const companies = await InsuranceCompanyRepository.listInsuranceCompanies(
       { isActive },
       page,
-      limit,
+      limit
     );
 
     return companies.map(toInsuranceCompanyResponse);
@@ -79,7 +79,7 @@ export class InsuranceCompanyService {
 
   static async updateInsuranceCompany(
     companyId: string,
-    payload: UpdateInsuranceCompanyPayload,
+    payload: UpdateInsuranceCompanyPayload
   ) {
     const updatePayload: Partial<InsuranceCompanyDocument> = {};
 
@@ -101,7 +101,7 @@ export class InsuranceCompanyService {
 
     if (payload.portalPassword) {
       updatePayload.portalPasswordEncrypted = encryptPortalPassword(
-        payload.portalPassword,
+        payload.portalPassword
       );
     }
 
@@ -135,7 +135,7 @@ export class InsuranceCompanyService {
 
     const company = await InsuranceCompanyRepository.updateInsuranceCompany(
       companyId,
-      updatePayload,
+      updatePayload
     );
 
     if (!company) {

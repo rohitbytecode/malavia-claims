@@ -1,6 +1,10 @@
 import cron from "node-cron";
 import { logger } from "@/config/logger.js";
-import { checkCourierDelays, checkPendingSettlements, checkPendingRefunds } from "./claim-check.job.js";
+import {
+  checkCourierDelays,
+  checkPendingSettlements,
+  checkPendingRefunds,
+} from "./claim-check.job.js";
 
 export const initCronJobs = () => {
   logger.info("Initializing Cron Jobs...");

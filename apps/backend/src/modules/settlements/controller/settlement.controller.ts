@@ -14,7 +14,9 @@ export class SettlementController {
 
   static async getSettlementByClaimId(req: Request, res: Response) {
     const { claimId } = req.params;
-    const settlement = await SettlementService.getSettlementByClaimId(claimId as string);
+    const settlement = await SettlementService.getSettlementByClaimId(
+      claimId as string
+    );
 
     return res.status(200).json({
       success: true,

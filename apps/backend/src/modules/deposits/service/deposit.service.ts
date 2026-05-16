@@ -26,7 +26,9 @@ interface UpdateRefundParams {
 
 export class DepositService {
   static async createDeposit(params: CreateDepositParams) {
-    const existing = await DepositRepository.findDepositByClaimId(params.claimId);
+    const existing = await DepositRepository.findDepositByClaimId(
+      params.claimId
+    );
     if (existing) {
       throw new AppError("Deposit record already exists for this claim", 400);
     }
@@ -52,7 +54,10 @@ export class DepositService {
     return deposit;
   }
 
-  static async updateRefundStatus(depositId: string, params: UpdateRefundParams) {
+  static async updateRefundStatus(
+    depositId: string,
+    params: UpdateRefundParams
+  ) {
     const deposit = await DepositRepository.findDepositById(depositId);
     if (!deposit) {
       throw new AppError("Deposit record not found", 404);
@@ -70,7 +75,10 @@ export class DepositService {
       remarks: params.remarks,
     };
 
-    const updatedDeposit = await DepositRepository.updateDeposit(depositId, updates as any);
+    const updatedDeposit = await DepositRepository.updateDeposit(
+      depositId,
+      updates as any
+    );
 
     // Generate Alert if refund amount exceeds collected amount
     if (params.refundAmount > deposit.collectedAmount) {

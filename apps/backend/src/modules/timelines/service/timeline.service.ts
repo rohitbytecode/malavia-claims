@@ -9,13 +9,14 @@ export class TimelineService {
   static async getClaimTimeline(claimId: string) {
     const objectId = new mongoose.Types.ObjectId(claimId);
 
-    const [statusHistory, communications, documents, settlements, alerts] = await Promise.all([
-      ClaimStatusHistoryModel.find({ claimId: objectId }).lean(),
-      CommunicationModel.find({ entityId: objectId }).lean(),
-      DocumentModel.find({ claimId: objectId }).lean(),
-      SettlementModel.find({ claimId: objectId }).lean(),
-      AlertModel.find({ claimId: objectId }).lean(),
-    ]);
+    const [statusHistory, communications, documents, settlements, alerts] =
+      await Promise.all([
+        ClaimStatusHistoryModel.find({ claimId: objectId }).lean(),
+        CommunicationModel.find({ entityId: objectId }).lean(),
+        DocumentModel.find({ claimId: objectId }).lean(),
+        SettlementModel.find({ claimId: objectId }).lean(),
+        AlertModel.find({ claimId: objectId }).lean(),
+      ]);
 
     const timeline: any[] = [];
 
@@ -68,6 +69,8 @@ export class TimelineService {
       });
     });
 
-    return timeline.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return timeline.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
   }
 }

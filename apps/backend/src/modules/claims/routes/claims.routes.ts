@@ -15,17 +15,17 @@ router.get("/", validate(listClaimsSchema), ClaimController.listClaims);
 router.get(
   "/:claimId",
   validate(getClaimParamsSchema),
-  ClaimController.getClaimById,
+  ClaimController.getClaimById
 );
 router.post(
   "/:claimId/status-transition",
   validate(transitionClaimStatusSchema),
-  ClaimController.transitionClaimStatus,
+  ClaimController.transitionClaimStatus
 );
 router.get(
   "/:claimId/history",
   validate(getClaimParamsSchema),
-  ClaimController.getClaimHistory,
+  ClaimController.getClaimHistory
 );
 
 export default router;

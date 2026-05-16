@@ -58,7 +58,7 @@ export class UserRepository {
 
   static async updateRefreshTokenHash(
     userId: string,
-    refreshTokenHash?: string,
+    refreshTokenHash?: string
   ) {
     if (!Types.ObjectId.isValid(userId)) {
       return null;
@@ -67,7 +67,7 @@ export class UserRepository {
     return UserModel.findByIdAndUpdate(
       userId,
       { refreshTokenHash },
-      { new: true },
+      { new: true }
     );
   }
 }

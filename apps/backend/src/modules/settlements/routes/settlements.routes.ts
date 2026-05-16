@@ -11,13 +11,13 @@ const router = Router();
 router.post(
   "/",
   validate(createSettlementSchema),
-  SettlementController.createSettlement,
+  SettlementController.createSettlement
 );
 
 router.get(
   "/claim/:claimId",
   validate(getSettlementByClaimSchema),
-  SettlementController.getSettlementByClaimId,
+  SettlementController.getSettlementByClaimId
 );
 
 export default router;

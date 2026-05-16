@@ -6,7 +6,7 @@ import { Roles } from "@/core/enums/roles.enum.js";
 export const authenticate = (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const authorization = req.headers["authorization"];
   const token =

@@ -92,7 +92,7 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const ClaimModel =

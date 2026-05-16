@@ -31,7 +31,7 @@ const departmentSchema = new mongoose.Schema<DepartmentDocument>(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const DepartmentModel =

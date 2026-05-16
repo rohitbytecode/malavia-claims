@@ -25,7 +25,10 @@ export class DepositController {
 
   static async updateRefundStatus(req: Request, res: Response) {
     const { depositId } = req.params;
-    const deposit = await DepositService.updateRefundStatus(depositId as string, req.body);
+    const deposit = await DepositService.updateRefundStatus(
+      depositId as string,
+      req.body
+    );
 
     return res.status(200).json({
       success: true,

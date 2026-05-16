@@ -31,7 +31,10 @@ export class AlertController {
     const { alertId } = req.params;
     const { resolvedBy } = req.body;
 
-    const alert = await AlertService.resolveAlert(alertId as string, resolvedBy);
+    const alert = await AlertService.resolveAlert(
+      alertId as string,
+      resolvedBy
+    );
 
     return res.status(200).json({
       success: true,

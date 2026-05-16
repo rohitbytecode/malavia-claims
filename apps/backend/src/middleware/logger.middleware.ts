@@ -12,7 +12,11 @@ export const requestLogger = (pinoHttp as any)({
     res.setHeader("X-Request-Id", id);
     return id;
   },
-  customLogLevel: function (req: IncomingMessage, res: ServerResponse, err: Error) {
+  customLogLevel: function (
+    req: IncomingMessage,
+    res: ServerResponse,
+    err: Error
+  ) {
     if (res.statusCode >= 400 && res.statusCode < 500) {
       return "warn";
     } else if (res.statusCode >= 500 || err) {

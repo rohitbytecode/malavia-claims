@@ -16,31 +16,31 @@ router.post(
   "/",
   authenticate,
   validate(createDepartmentSchema),
-  asyncHandler(DepartmentController.createDepartment),
+  asyncHandler(DepartmentController.createDepartment)
 );
 router.get(
   "/",
   authenticate,
   validate(listDepartmentsSchema),
-  asyncHandler(DepartmentController.listDepartments),
+  asyncHandler(DepartmentController.listDepartments)
 );
 router.get(
   "/:departmentId",
   authenticate,
   validate(departmentIdParamsSchema),
-  asyncHandler(DepartmentController.getDepartment),
+  asyncHandler(DepartmentController.getDepartment)
 );
 router.patch(
   "/:departmentId",
   authenticate,
   validate(updateDepartmentSchema),
-  asyncHandler(DepartmentController.updateDepartment),
+  asyncHandler(DepartmentController.updateDepartment)
 );
 router.delete(
   "/:departmentId",
   authenticate,
   validate(departmentIdParamsSchema),
-  asyncHandler(DepartmentController.deleteDepartment),
+  asyncHandler(DepartmentController.deleteDepartment)
 );
 
 export default router;

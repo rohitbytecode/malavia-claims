@@ -4,7 +4,7 @@ import { InsuranceCompanyService } from "@/modules/insurance-companies/service/i
 export class InsuranceCompanyController {
   static async createInsuranceCompany(req: Request, res: Response) {
     const company = await InsuranceCompanyService.createInsuranceCompany(
-      req.body,
+      req.body
     );
 
     return res.status(201).json({
@@ -24,7 +24,7 @@ export class InsuranceCompanyController {
     const companies = await InsuranceCompanyService.listInsuranceCompanies(
       isActive === undefined ? undefined : isActive === "true",
       Number(page ?? 1),
-      Number(limit ?? 20),
+      Number(limit ?? 20)
     );
 
     return res.status(200).json({
@@ -56,7 +56,7 @@ export class InsuranceCompanyController {
 
     const company = await InsuranceCompanyService.updateInsuranceCompany(
       companyId,
-      req.body,
+      req.body
     );
 
     return res.status(200).json({

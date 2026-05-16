@@ -45,12 +45,12 @@ export class UserService {
     role: Roles | undefined,
     isActive: boolean | undefined,
     page: number,
-    limit: number,
+    limit: number
   ) {
     const users = await UserRepository.listUsers(
       { role, isActive },
       page,
-      limit,
+      limit
     );
 
     return users.map(toUserResponse);

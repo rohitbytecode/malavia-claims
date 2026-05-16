@@ -40,7 +40,7 @@ export class AuthService {
 
     const passwordMatches = await comparePassword(
       payload.password,
-      user.password,
+      user.password
     );
 
     if (!passwordMatches) {
@@ -48,16 +48,16 @@ export class AuthService {
     }
 
     const accessToken = signAccessToken(
-      buildTokenPayload(user._id.toString(), user.role),
+      buildTokenPayload(user._id.toString(), user.role)
     );
     const refreshToken = signRefreshToken(
-      buildTokenPayload(user._id.toString(), user.role),
+      buildTokenPayload(user._id.toString(), user.role)
     );
     const refreshTokenHash = await hashPassword(refreshToken);
 
     await AuthRepository.saveRefreshTokenHash(
       user._id.toString(),
-      refreshTokenHash,
+      refreshTokenHash
     );
 
     return {
@@ -77,7 +77,7 @@ export class AuthService {
 
     const refreshTokenMatches = await comparePassword(
       refreshToken,
-      user.refreshTokenHash,
+      user.refreshTokenHash
     );
 
     if (!refreshTokenMatches) {
@@ -89,16 +89,16 @@ export class AuthService {
     }
 
     const accessToken = signAccessToken(
-      buildTokenPayload(user._id.toString(), user.role),
+      buildTokenPayload(user._id.toString(), user.role)
     );
     const newRefreshToken = signRefreshToken(
-      buildTokenPayload(user._id.toString(), user.role),
+      buildTokenPayload(user._id.toString(), user.role)
     );
     const newRefreshTokenHash = await hashPassword(newRefreshToken);
 
     await AuthRepository.saveRefreshTokenHash(
       user._id.toString(),
-      newRefreshTokenHash,
+      newRefreshTokenHash
     );
 
     return {

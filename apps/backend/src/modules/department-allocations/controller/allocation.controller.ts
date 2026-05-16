@@ -14,7 +14,9 @@ export class AllocationController {
 
   static async getAllocationsBySettlement(req: Request, res: Response) {
     const { settlementId } = req.params;
-    const allocations = await AllocationService.getAllocationsBySettlement(settlementId as string);
+    const allocations = await AllocationService.getAllocationsBySettlement(
+      settlementId as string
+    );
 
     return res.status(200).json({
       success: true,

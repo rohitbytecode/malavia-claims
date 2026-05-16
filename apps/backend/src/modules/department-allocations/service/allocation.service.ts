@@ -19,16 +19,25 @@ interface CreateAllocationsParams {
 
 export class AllocationService {
   static async allocateAmount(params: CreateAllocationsParams) {
-    const settlement = await SettlementRepository.findSettlementById(params.settlementId);
+    const settlement = await SettlementRepository.findSettlementById(
+      params.settlementId
+    );
     if (!settlement) {
       throw new AppError("Settlement not found", 404);
     }
 
-    const currentTotalAllocated = await AllocationRepository.getTotalAllocatedAmount(params.settlementId);
-    
-    const newAllocationTotal = params.allocations.reduce((sum, item) => sum + item.amount, 0);
+    const currentTotalAllocated =
+      await AllocationRepository.getTotalAllocatedAmount(params.settlementId);
 
-    if (currentTotalAllocated + newAllocationTotal > settlement.approvedAmount) {
+    const newAllocationTotal = params.allocations.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    );
+
+    if (
+      currentTotalAllocated + newAllocationTotal >
+      settlement.approvedAmount
+    ) {
       throw new AppError(
         `Total allocation exceeds settlement approved amount. Approved: ${settlement.approvedAmount}`,
         400

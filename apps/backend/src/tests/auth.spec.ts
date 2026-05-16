@@ -17,12 +17,10 @@ describe("Auth Endpoints", () => {
       isActive: true,
     });
 
-    const response = await request(app)
-      .post("/api/v1/auth/login")
-      .send({
-        email: "test@local.com",
-        password,
-      });
+    const response = await request(app).post("/api/v1/auth/login").send({
+      email: "test@local.com",
+      password,
+    });
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -30,12 +28,10 @@ describe("Auth Endpoints", () => {
   });
 
   it("should fail authentication with invalid password", async () => {
-    const response = await request(app)
-      .post("/api/v1/auth/login")
-      .send({
-        email: "test@local.com",
-        password: "WrongPassword",
-      });
+    const response = await request(app).post("/api/v1/auth/login").send({
+      email: "test@local.com",
+      password: "WrongPassword",
+    });
 
     expect(response.status).toBe(401);
   });

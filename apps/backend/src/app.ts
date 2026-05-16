@@ -2,7 +2,10 @@ import express from "express";
 import cors from "cors";
 
 import { errorMiddleware } from "./middleware/error.middleware.js";
-import { setupSecurityMiddleware, apiLimiter } from "./middleware/security.middleware.js";
+import {
+  setupSecurityMiddleware,
+  apiLimiter,
+} from "./middleware/security.middleware.js";
 import { requestLogger } from "./middleware/logger.middleware.js";
 import { env } from "./config/env.js";
 import authRouter from "./modules/auth/index.js";
