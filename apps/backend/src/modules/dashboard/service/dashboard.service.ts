@@ -1,0 +1,89 @@
+import { ClaimModel } from "@/modules/claims/schema/claim.schema.js";
+import { ClaimStatus } from "@/modules/claims/constant/claim-status.enum.js";
+import { AlertModel } from "@/modules/alerts/schema/alert.schema.js";
+import { SettlementModel } from "@/modules/settlements/schema/settlement.schema.js";
+import { DepositModel } from "@/modules/deposits/schema/deposit.schema.js";
+import { RefundStatus } from "@/modules/deposits/constant/refund-status.enum.js";
+
+export class DashboardService {
+  static async getDashboardMetrics() {
+    // 1. Pending Counts
+    const pendingPreauthCount = await ClaimModel.countDocuments({
+      status: ClaimStatus.PREAUTH_PENDING,
+    });
+    
+    const pendingFinalApprovalCount = await ClaimModel.countDocuments({
+      status: ClaimStatus.FINAL_APPROVAL_PENDING,
+    });
+
+    const pendingSettlements = await ClaimModel.countDocuments({
+      status: ClaimStatus.SETTLEMENT_PENDING,
+    });
+
+    // 2. Delayed Courier Claims
+    const now = new Date();
+    const days45Ago = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000);
+    const days60Ago = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+
+    const delayedCourier45Days = await ClaimModel.countDocuments({
+      createdAt: { $lte: days45Ago, $gt: days60Ago },
+      status: { $ne: ClaimStatus.SETTLED },
+    });
+
+    const delayedCourier60Days = await ClaimModel.countDocuments({
+      createdAt: { $lte: days60Ago },
+      status: { $ne: ClaimStatus.SETTLED },
+    });
+
+    // 3. Pending Deposit Refunds
+    const pendingDepositRefunds = await DepositModel.countDocuments({
+      refundStatus: RefundStatus.PENDING,
+    });
+
+    // 4. Active Alerts
+    const activeAlertsCount = await AlertModel.countDocuments({
+      resolved: false,
+    });
+
+    // 5. Total Settled Amount
+    const totalSettledResult = await SettlementModel.aggregate([
+      { $group: { _id: null, total: { $sum: "$approvedAmount" } } },
+    ]);
+    const totalSettledAmount = totalSettledResult.length > 0 ? totalSettledResult[0].total : 0;
+
+    // 6. Claims by Status
+    const claimsByStatus = await ClaimModel.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
+
+    // 7. Claims Ageing Summary
+    const days30Ago = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const days90Ago = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+    const ageingSummary = {
+      under30Days: await ClaimModel.countDocuments({ createdAt: { $gt: days30Ago } }),
+      between30And60Days: await ClaimModel.countDocuments({ createdAt: { $lte: days30Ago, $gt: days60Ago } }),
+      between60And90Days: await ClaimModel.countDocuments({ createdAt: { $lte: days60Ago, $gt: days90Ago } }),
+      over90Days: await ClaimModel.countDocuments({ createdAt: { $lte: days90Ago } }),
+    };
+
+    return {
+      pendingCounts: {
+        preauth: pendingPreauthCount,
+        finalApproval: pendingFinalApprovalCount,
+        settlements: pendingSettlements,
+      },
+      delayedClaims: {
+        over45Days: delayedCourier45Days,
+        over60Days: delayedCourier60Days,
+      },
+      pendingDepositRefunds,
+      activeAlertsCount,
+      financials: {
+        totalSettledAmount,
+      },
+      claimsByStatus: claimsByStatus.map(s => ({ status: s._id, count: s.count })),
+      ageingSummary,
+    };
+  }
+}
