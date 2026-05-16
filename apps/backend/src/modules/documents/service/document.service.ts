@@ -19,7 +19,7 @@ export class DocumentService {
   static async uploadDocument(payload: UploadDocumentPayload) {
     const latest = await DocumentRepository.findLatestVersion(
       payload.claimId,
-      payload.documentType,
+      payload.documentType
     );
 
     const version = latest?.version ? latest.version + 1 : 1;

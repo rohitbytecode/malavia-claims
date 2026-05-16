@@ -73,7 +73,7 @@ export class ClaimService {
     type: ClaimType | undefined,
     status: ClaimStatus | undefined,
     page: number,
-    limit: number,
+    limit: number
   ) {
     const claims = await ClaimRepository.findClaims(
       {
@@ -81,7 +81,7 @@ export class ClaimService {
         status: status,
       },
       page,
-      limit,
+      limit
     );
 
     return claims.map(toClaimResponse);
@@ -91,7 +91,7 @@ export class ClaimService {
     claimId: string,
     toStatus: ClaimStatus,
     remarks?: string,
-    performedBy?: string,
+    performedBy?: string
   ) {
     const claim = await ClaimRepository.findClaimById(claimId);
 
@@ -105,7 +105,7 @@ export class ClaimService {
       claimId,
       toStatus,
       remarks,
-      performedBy,
+      performedBy
     );
 
     if (!updatedClaim) {

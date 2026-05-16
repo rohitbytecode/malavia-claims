@@ -62,7 +62,7 @@ const workflowMapByType: Record<ClaimType, ClaimWorkflowMap> = {
 
 export const getAllowedStatusTransitions = (
   claimType: ClaimType,
-  currentStatus: ClaimStatus,
+  currentStatus: ClaimStatus
 ): ClaimStatus[] => {
   return workflowMapByType[claimType]?.[currentStatus] ?? [];
 };
@@ -70,14 +70,14 @@ export const getAllowedStatusTransitions = (
 export const validateClaimStatusTransition = (
   claimType: ClaimType,
   currentStatus: ClaimStatus,
-  nextStatus: ClaimStatus,
+  nextStatus: ClaimStatus
 ): void => {
   const allowedNext = getAllowedStatusTransitions(claimType, currentStatus);
 
   if (!allowedNext.includes(nextStatus)) {
     throw new AppError(
       `Invalid transition from ${currentStatus} to ${nextStatus} for claim type ${claimType}`,
-      400,
+      400
     );
   }
 };

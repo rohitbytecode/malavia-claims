@@ -12,19 +12,19 @@ const router = Router();
 router.post(
   "/",
   validate(createDepositSchema),
-  DepositController.createDeposit,
+  DepositController.createDeposit
 );
 
 router.get(
   "/claim/:claimId",
   validate(getDepositByClaimSchema),
-  DepositController.getDepositByClaimId,
+  DepositController.getDepositByClaimId
 );
 
 router.patch(
   "/:depositId/refund",
   validate(updateRefundSchema),
-  DepositController.updateRefundStatus,
+  DepositController.updateRefundStatus
 );
 
 export default router;

@@ -11,13 +11,13 @@ const router = Router();
 router.post(
   "/",
   validate(createAllocationsSchema),
-  AllocationController.createAllocations,
+  AllocationController.createAllocations
 );
 
 router.get(
   "/settlement/:settlementId",
   validate(getAllocationsBySettlementSchema),
-  AllocationController.getAllocationsBySettlement,
+  AllocationController.getAllocationsBySettlement
 );
 
 export default router;

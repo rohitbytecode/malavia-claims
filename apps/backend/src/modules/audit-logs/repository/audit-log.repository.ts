@@ -34,7 +34,11 @@ export class AuditLogRepository {
       .lean();
   }
 
-  static async getLogsByModule(module: AuditModule, page: number, limit: number) {
+  static async getLogsByModule(
+    module: AuditModule,
+    page: number,
+    limit: number
+  ) {
     return AuditLogModel.find({ module })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)

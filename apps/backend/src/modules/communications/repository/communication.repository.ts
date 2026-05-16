@@ -17,7 +17,7 @@ export class CommunicationRepository {
     claimId: string,
     filters: CommunicationFilters,
     page: number,
-    limit: number,
+    limit: number
   ) {
     const query: Record<string, unknown> = {
       claimId: new Types.ObjectId(claimId),

@@ -14,27 +14,27 @@ const router = Router();
 router.post(
   "/",
   validate(createUserSchema),
-  asyncHandler(UserController.createUser),
+  asyncHandler(UserController.createUser)
 );
 router.get(
   "/",
   validate(listUsersSchema),
-  asyncHandler(UserController.listUsers),
+  asyncHandler(UserController.listUsers)
 );
 router.get(
   "/:userId",
   validate(getUserParamsSchema),
-  asyncHandler(UserController.getUser),
+  asyncHandler(UserController.getUser)
 );
 router.patch(
   "/:userId",
   validate(updateUserSchema),
-  asyncHandler(UserController.updateUser),
+  asyncHandler(UserController.updateUser)
 );
 router.patch(
   "/:userId/deactivate",
   validate(getUserParamsSchema),
-  asyncHandler(UserController.deactivateUser),
+  asyncHandler(UserController.deactivateUser)
 );
 
 export default router;

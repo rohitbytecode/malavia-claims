@@ -11,13 +11,13 @@ const router = Router();
 router.get(
   "/entity/:entityId",
   validate(getEntityLogsSchema),
-  AuditLogController.getEntityLogs,
+  AuditLogController.getEntityLogs
 );
 
 router.get(
   "/module/:module",
   validate(getModuleLogsSchema),
-  AuditLogController.getModuleLogs,
+  AuditLogController.getModuleLogs
 );
 
 export default router;

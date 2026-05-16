@@ -23,7 +23,7 @@ export class SettlementRepository {
     remarks?: string
   ) {
     const updatePayload: any = { ...updates };
-    
+
     if (remarks) {
       updatePayload.$push = { remarks };
     }

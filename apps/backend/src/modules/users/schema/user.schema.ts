@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const UserModel =

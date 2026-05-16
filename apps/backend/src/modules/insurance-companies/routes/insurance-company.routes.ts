@@ -16,31 +16,31 @@ router.post(
   "/",
   authenticate,
   validate(createInsuranceCompanySchema),
-  asyncHandler(InsuranceCompanyController.createInsuranceCompany),
+  asyncHandler(InsuranceCompanyController.createInsuranceCompany)
 );
 router.get(
   "/",
   authenticate,
   validate(listInsuranceCompaniesSchema),
-  asyncHandler(InsuranceCompanyController.listInsuranceCompanies),
+  asyncHandler(InsuranceCompanyController.listInsuranceCompanies)
 );
 router.get(
   "/:companyId",
   authenticate,
   validate(companyIdParamsSchema),
-  asyncHandler(InsuranceCompanyController.getInsuranceCompany),
+  asyncHandler(InsuranceCompanyController.getInsuranceCompany)
 );
 router.patch(
   "/:companyId",
   authenticate,
   validate(updateInsuranceCompanySchema),
-  asyncHandler(InsuranceCompanyController.updateInsuranceCompany),
+  asyncHandler(InsuranceCompanyController.updateInsuranceCompany)
 );
 router.delete(
   "/:companyId",
   authenticate,
   validate(companyIdParamsSchema),
-  asyncHandler(InsuranceCompanyController.deleteInsuranceCompany),
+  asyncHandler(InsuranceCompanyController.deleteInsuranceCompany)
 );
 
 export default router;

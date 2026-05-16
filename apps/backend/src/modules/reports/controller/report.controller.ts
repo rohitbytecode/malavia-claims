@@ -4,7 +4,9 @@ import { ReportService } from "../service/report.service.js";
 export class ReportController {
   static async getPatientClaimSummary(req: Request, res: Response) {
     const { patientId } = req.params;
-    const report = await ReportService.generatePatientClaimSummary(patientId as string);
+    const report = await ReportService.generatePatientClaimSummary(
+      patientId as string
+    );
 
     return res.status(200).json({
       success: true,
@@ -25,7 +27,7 @@ export class ReportController {
 
   static async getMonthlyReport(req: Request, res: Response) {
     const { year, month } = req.query;
-    
+
     if (!year || !month) {
       return res.status(400).json({
         success: false,
@@ -33,7 +35,10 @@ export class ReportController {
       });
     }
 
-    const report = await ReportService.generateMonthlyReport(Number(year), Number(month));
+    const report = await ReportService.generateMonthlyReport(
+      Number(year),
+      Number(month)
+    );
 
     return res.status(200).json({
       success: true,

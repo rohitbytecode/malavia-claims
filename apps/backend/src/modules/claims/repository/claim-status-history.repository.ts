@@ -4,7 +4,7 @@ import { ClaimStatusHistoryDocument } from "@/modules/claims/types/claim.types.j
 
 export class ClaimStatusHistoryRepository {
   static async createClaimStatusHistory(
-    payload: Partial<ClaimStatusHistoryDocument>,
+    payload: Partial<ClaimStatusHistoryDocument>
   ) {
     return ClaimStatusHistoryModel.create(payload);
   }

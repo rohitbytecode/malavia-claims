@@ -8,7 +8,7 @@ const contactPersonSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     designation: { type: String },
   },
-  { _id: false },
+  { _id: false }
 );
 
 const escalationContactSchema = new mongoose.Schema(
@@ -18,7 +18,7 @@ const escalationContactSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     level: { type: String, required: true },
   },
-  { _id: false },
+  { _id: false }
 );
 
 const insuranceCompanySchema = new mongoose.Schema<InsuranceCompanyDocument>(
@@ -80,12 +80,12 @@ const insuranceCompanySchema = new mongoose.Schema<InsuranceCompanyDocument>(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const InsuranceCompanyModel =
   mongoose.models.InsuranceCompany ||
   mongoose.model<InsuranceCompanyDocument>(
     "InsuranceCompany",
-    insuranceCompanySchema,
+    insuranceCompanySchema
   );

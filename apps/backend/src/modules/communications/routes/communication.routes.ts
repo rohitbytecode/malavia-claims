@@ -14,13 +14,13 @@ router.post(
   "/",
   authenticate,
   validate(createCommunicationSchema),
-  asyncHandler(CommunicationController.createCommunication),
+  asyncHandler(CommunicationController.createCommunication)
 );
 router.get(
   "/",
   authenticate,
   validate(listCommunicationsSchema),
-  asyncHandler(CommunicationController.listCommunications),
+  asyncHandler(CommunicationController.listCommunications)
 );
 
 export default router;

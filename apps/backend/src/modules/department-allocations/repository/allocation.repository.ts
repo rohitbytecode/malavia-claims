@@ -22,7 +22,9 @@ export class AllocationRepository {
   static async getAllocationsBySettlement(settlementId: string) {
     if (!Types.ObjectId.isValid(settlementId)) return [];
 
-    return AllocationModel.find({ settlementId: new Types.ObjectId(settlementId) })
+    return AllocationModel.find({
+      settlementId: new Types.ObjectId(settlementId),
+    })
       .populate("departmentId", "name")
       .lean();
   }

@@ -17,7 +17,7 @@ export class DepartmentRepository {
   static async listDepartments(
     filters: DepartmentFilters,
     page: number,
-    limit: number,
+    limit: number
   ) {
     const query: Record<string, unknown> = {};
 
@@ -34,7 +34,7 @@ export class DepartmentRepository {
 
   static async updateDepartment(
     departmentId: string,
-    update: Partial<DepartmentDocument>,
+    update: Partial<DepartmentDocument>
   ) {
     return DepartmentModel.findByIdAndUpdate(departmentId, update, {
       new: true,

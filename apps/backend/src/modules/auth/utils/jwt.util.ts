@@ -13,7 +13,7 @@ export const signAccessToken = (payload: TokenPayload) => {
     env.JWT_ACCESS_SECRET,
     {
       expiresIn: env.ACCESS_TOKEN_EXPIRES_IN,
-    },
+    }
   );
 };
 
@@ -23,20 +23,20 @@ export const signRefreshToken = (payload: TokenPayload) => {
     env.JWT_REFRESH_SECRET,
     {
       expiresIn: env.REFRESH_TOKEN_EXPIRES_IN,
-    },
+    }
   );
 };
 
 export const verifyAccessToken = (token: string) => {
   return (verify as unknown as (...args: any[]) => any)(
     token,
-    env.JWT_ACCESS_SECRET,
+    env.JWT_ACCESS_SECRET
   ) as TokenPayload;
 };
 
 export const verifyRefreshToken = (token: string) => {
   return (verify as unknown as (...args: any[]) => any)(
     token,
-    env.JWT_REFRESH_SECRET,
+    env.JWT_REFRESH_SECRET
   ) as TokenPayload;
 };

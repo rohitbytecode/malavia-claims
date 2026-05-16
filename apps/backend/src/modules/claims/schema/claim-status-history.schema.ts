@@ -34,12 +34,12 @@ const claimStatusHistorySchema =
     },
     {
       timestamps: true,
-    },
+    }
   );
 
 export const ClaimStatusHistoryModel =
   mongoose.models.ClaimStatusHistory ||
   mongoose.model<ClaimStatusHistoryDocument>(
     "ClaimStatusHistory",
-    claimStatusHistorySchema,
+    claimStatusHistorySchema
   );

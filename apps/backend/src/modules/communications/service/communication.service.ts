@@ -37,7 +37,7 @@ export class CommunicationService {
     followUpBefore: string | undefined,
     followUpAfter: string | undefined,
     page: number,
-    limit: number,
+    limit: number
   ) {
     const communications =
       await CommunicationRepository.listCommunicationsByClaim(
@@ -48,7 +48,7 @@ export class CommunicationService {
           followUpAfter: followUpAfter ? new Date(followUpAfter) : undefined,
         },
         page,
-        limit,
+        limit
       );
 
     return communications.map(toCommunicationResponse);

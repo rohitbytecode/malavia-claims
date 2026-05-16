@@ -35,7 +35,7 @@ const communicationSchema = new mongoose.Schema<CommunicationDocument>(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const CommunicationModel =

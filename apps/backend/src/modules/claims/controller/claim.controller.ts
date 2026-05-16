@@ -38,7 +38,7 @@ export class ClaimController {
       type as any,
       status as any,
       Number(page ?? 1),
-      Number(limit ?? 20),
+      Number(limit ?? 20)
     );
 
     return res.status(200).json({
@@ -57,7 +57,7 @@ export class ClaimController {
       claimId,
       toStatus,
       remarks,
-      performedBy,
+      performedBy
     );
 
     return res.status(200).json({

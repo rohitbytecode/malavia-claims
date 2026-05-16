@@ -22,7 +22,7 @@ export class DepartmentController {
     const departments = await DepartmentService.listDepartments(
       isActive === undefined ? undefined : isActive === "true",
       Number(page ?? 1),
-      Number(limit ?? 20),
+      Number(limit ?? 20)
     );
 
     return res.status(200).json({
@@ -53,7 +53,7 @@ export class DepartmentController {
 
     const department = await DepartmentService.updateDepartment(
       departmentId,
-      req.body,
+      req.body
     );
 
     return res.status(200).json({

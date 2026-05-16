@@ -15,12 +15,23 @@ export class NotificationService {
     try {
       await NotificationRepository.createNotification(params);
     } catch (error) {
-      console.error("[NotificationService] Failed to send notification:", error);
+      console.error(
+        "[NotificationService] Failed to send notification:",
+        error
+      );
     }
   }
 
-  static async getUserNotifications(userId: string, page: number = 1, limit: number = 20) {
-    const notifications = await NotificationRepository.getUserNotifications(userId, page, limit);
+  static async getUserNotifications(
+    userId: string,
+    page: number = 1,
+    limit: number = 20
+  ) {
+    const notifications = await NotificationRepository.getUserNotifications(
+      userId,
+      page,
+      limit
+    );
     const unreadCount = await NotificationRepository.getUnreadCount(userId);
 
     return {
@@ -30,7 +41,10 @@ export class NotificationService {
   }
 
   static async markAsRead(notificationId: string, userId: string) {
-    const notification = await NotificationRepository.markAsRead(notificationId, userId);
+    const notification = await NotificationRepository.markAsRead(
+      notificationId,
+      userId
+    );
     if (!notification) {
       throw new AppError("Notification not found", 404);
     }

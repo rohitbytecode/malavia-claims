@@ -29,7 +29,12 @@ const runSeeders = async () => {
     }
 
     // 2. Seed Departments
-    const departments = ["Cardiology", "Neurology", "Orthopedics", "General Surgery"];
+    const departments = [
+      "Cardiology",
+      "Neurology",
+      "Orthopedics",
+      "General Surgery",
+    ];
     for (const name of departments) {
       const exists = await DepartmentModel.findOne({ name });
       if (!exists) {

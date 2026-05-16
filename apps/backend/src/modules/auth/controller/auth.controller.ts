@@ -4,7 +4,7 @@ import { AuthService } from "@/modules/auth/service/auth.service.js";
 export class AuthController {
   static async login(req: Request, res: Response) {
     const { user, accessToken, refreshToken } = await AuthService.login(
-      req.body,
+      req.body
     );
 
     return res.status(200).json({
@@ -20,7 +20,7 @@ export class AuthController {
 
   static async refreshToken(req: Request, res: Response) {
     const { accessToken, refreshToken } = await AuthService.refreshToken(
-      req.body.refreshToken,
+      req.body.refreshToken
     );
 
     return res.status(200).json({

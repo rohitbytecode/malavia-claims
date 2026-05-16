@@ -24,7 +24,7 @@ export class UserController {
       role as any,
       isActive === undefined ? undefined : isActive === "true",
       Number(page ?? 1),
-      Number(limit ?? 20),
+      Number(limit ?? 20)
     );
 
     return res.status(200).json({

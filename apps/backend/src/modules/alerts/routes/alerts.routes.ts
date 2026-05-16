@@ -12,19 +12,19 @@ const router = Router();
 router.get(
   "/active",
   validate(listActiveAlertsSchema),
-  AlertController.listActiveAlerts,
+  AlertController.listActiveAlerts
 );
 
 router.get(
   "/claim/:claimId",
   validate(getAlertsByClaimSchema),
-  AlertController.getAlertsByClaim,
+  AlertController.getAlertsByClaim
 );
 
 router.patch(
   "/:alertId/resolve",
   validate(resolveAlertSchema),
-  AlertController.resolveAlert,
+  AlertController.resolveAlert
 );
 
 export default router;

@@ -4,7 +4,7 @@ import { CommunicationService } from "@/modules/communications/service/communica
 export class CommunicationController {
   static async createCommunication(req: Request, res: Response) {
     const communication = await CommunicationService.createCommunication(
-      req.body,
+      req.body
     );
 
     return res.status(201).json({
@@ -31,7 +31,7 @@ export class CommunicationController {
       followUpBefore,
       followUpAfter,
       Number(page ?? 1),
-      Number(limit ?? 20),
+      Number(limit ?? 20)
     );
 
     return res.status(200).json({

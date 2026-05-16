@@ -39,7 +39,10 @@ export const buildStatusQuery = (field: string, status?: string | string[]) => {
   return { [field]: status };
 };
 
-export const buildSortOptions = (sortBy?: string, sortOrder: "asc" | "desc" = "desc") => {
+export const buildSortOptions = (
+  sortBy?: string,
+  sortOrder: "asc" | "desc" = "desc"
+) => {
   if (!sortBy) return { createdAt: -1 };
   return { [sortBy]: sortOrder === "asc" ? 1 : -1 };
 };

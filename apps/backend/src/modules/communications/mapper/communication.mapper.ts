@@ -1,7 +1,7 @@
 import { CommunicationDocument } from "@/modules/communications/types/communication.types.js";
 
 export const toCommunicationResponse = (
-  communication: Partial<CommunicationDocument>,
+  communication: Partial<CommunicationDocument>
 ) => {
   return {
     id: communication._id?.toString() ?? null,

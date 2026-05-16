@@ -30,7 +30,7 @@ export const toClaimResponse = (claim: ClaimDocument) => {
 };
 
 export const toClaimStatusHistoryResponse = (
-  entry: ClaimStatusHistoryDocument,
+  entry: ClaimStatusHistoryDocument
 ) => {
   const historyObject = entry.toObject();
 

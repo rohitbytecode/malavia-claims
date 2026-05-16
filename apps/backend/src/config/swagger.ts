@@ -9,7 +9,8 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: "HICMS API",
       version: "1.0.0",
-      description: "Hospital Insurance Claims Management System API Documentation",
+      description:
+        "Hospital Insurance Claims Management System API Documentation",
     },
     servers: [
       {
