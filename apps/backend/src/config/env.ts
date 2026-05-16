@@ -13,6 +13,7 @@ const envSchema = z.object({
 
   JWT_ACCESS_SECRET: z.string(),
   JWT_REFRESH_SECRET: z.string(),
+  PORTAL_PASSWORD_SECRET: z.string(),
 
   ACCESS_TOKEN_EXPIRES_IN: z.string().default("1d"),
   REFRESH_TOKEN_EXPIRES_IN: z.string().default("7d"),

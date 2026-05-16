@@ -1,0 +1,82 @@
+import { Request, Response } from "express";
+import { ClaimService } from "@/modules/claims/service/claim.service.js";
+
+export class ClaimController {
+  static async createClaim(req: Request, res: Response) {
+    const claim = await ClaimService.createClaim(req.body);
+
+    return res.status(201).json({
+      success: true,
+      message: "Claim created successfully",
+      data: claim,
+    });
+  }
+
+  static async getClaimById(req: Request, res: Response) {
+    const claimId = Array.isArray(req.params.claimId)
+      ? req.params.claimId[0]
+      : req.params.claimId;
+
+    const claim = await ClaimService.getClaimById(claimId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Claim fetched successfully",
+      data: claim,
+    });
+  }
+
+  static async listClaims(req: Request, res: Response) {
+    const { type, status, page, limit } = req.query as {
+      type?: string;
+      status?: string;
+      page?: string;
+      limit?: string;
+    };
+
+    const claims = await ClaimService.listClaims(
+      type as any,
+      status as any,
+      Number(page ?? 1),
+      Number(limit ?? 20),
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Claims listed successfully",
+      data: claims,
+    });
+  }
+
+  static async transitionClaimStatus(req: Request, res: Response) {
+    const claimId = Array.isArray(req.params.claimId)
+      ? req.params.claimId[0]
+      : req.params.claimId;
+    const { toStatus, remarks, performedBy } = req.body;
+    const claim = await ClaimService.transitionClaimStatus(
+      claimId,
+      toStatus,
+      remarks,
+      performedBy,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Claim status updated successfully",
+      data: claim,
+    });
+  }
+
+  static async getClaimHistory(req: Request, res: Response) {
+    const claimId = Array.isArray(req.params.claimId)
+      ? req.params.claimId[0]
+      : req.params.claimId;
+    const history = await ClaimService.getStatusHistory(claimId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Claim status history fetched successfully",
+      data: history,
+    });
+  }
+}

@@ -1,0 +1,4 @@
+export enum ClaimType {
+  CASHLESS = "CASHLESS",
+  REIMBURSEMENT = "REIMBURSEMENT",
+}

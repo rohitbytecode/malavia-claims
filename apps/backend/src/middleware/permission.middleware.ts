@@ -6,7 +6,7 @@ export const allowRoles =
   (req: Request, res: Response, next: NextFunction) => {
     const userRole = req.user?.role;
 
-    if (!roles.includes(userRole)) {
+    if (!userRole || !roles.includes(userRole)) {
       return res.status(403).json({
         success: false,
         message: "Forbidden",
