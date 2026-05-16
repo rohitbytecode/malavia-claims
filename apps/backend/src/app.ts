@@ -12,7 +12,7 @@ app.use(express.json());
 app.get("/health", (_, res) => {
   res.status(200).json({
     success: true,
-    message: "Claim Management API Running"
+    message: "Claim Management API Running",
   });
 });
 

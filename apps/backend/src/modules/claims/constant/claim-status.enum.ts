@@ -14,5 +14,5 @@ export enum ClaimStatus {
 
   PAYMENT_RECEIVED = "PAYMENT_RECEIVED",
 
-  CLOSED = "CLOSED"
+  CLOSED = "CLOSED",
 }

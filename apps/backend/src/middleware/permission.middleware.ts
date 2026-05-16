@@ -9,7 +9,7 @@ export const allowRoles =
     if (!roles.includes(userRole)) {
       return res.status(403).json({
         success: false,
-        message: "Forbidden"
+        message: "Forbidden",
       });
     }
 

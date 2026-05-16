@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { z } from "zod";
-import { logger } from './logger.js';
+import { logger } from "./logger.js";
 
 dotenv.config();
 
@@ -15,7 +15,7 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string(),
 
   ACCESS_TOKEN_EXPIRES_IN: z.string().default("1d"),
-  REFRESH_TOKEN_EXPIRES_IN: z.string().default("7d")
+  REFRESH_TOKEN_EXPIRES_IN: z.string().default("7d"),
 });
 
 const parsed = envSchema.safeParse(process.env);

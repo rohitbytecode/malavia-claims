@@ -10,12 +10,12 @@ export const errorMiddleware = (
   if (error instanceof AppError) {
     return res.status(error.statusCode).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 
   return res.status(500).json({
     success: false,
-    message: "Internal Server Error"
+    message: "Internal Server Error",
   });
 };
