@@ -28,6 +28,23 @@ const runSeeders = async () => {
       logger.info("Admin User already exists.");
     }
 
+    const superAdminExists = await UserModel.findOne({
+      email: "superadmin@hicms.local",
+    });
+    if (!superAdminExists) {
+      const hashedPassword = await bcrypt.hash("SuperAdmin@123!", 10);
+      await UserModel.create({
+        fullName: "Super Admin",
+        email: "superadmin@hicms.local",
+        password: hashedPassword,
+        role: Roles.SUPER_ADMIN,
+        isActive: true,
+      });
+      logger.info("Default Super Admin User created.");
+    } else {
+      logger.info("Super Admin User already exists.");
+    }
+
     // 2. Seed Departments
     const departments = [
       "Cardiology",
@@ -40,6 +57,11 @@ const runSeeders = async () => {
       if (!exists) {
         await DepartmentModel.create({
           name,
+          code: name
+            .split(" ")
+            .map((word) => word[0])
+            .join("")
+            .toUpperCase(),
           description: `Department of ${name}`,
           isActive: true,
         });

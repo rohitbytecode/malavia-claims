@@ -1,8 +1,38 @@
 import rateLimit from "express-rate-limit";
 import mongoSanitize from "express-mongo-sanitize";
-import { Application } from "express";
+import { Application, Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import { env } from "@/config/env.js";
+
+const sanitizeRequest = (req: Request, res: Response, next: NextFunction) => {
+  const sanitize = (mongoSanitize as any).sanitize as (target: any) => any;
+
+  if (req.body) {
+    req.body = sanitize(req.body);
+  }
+  if (req.params) {
+    req.params = sanitize(req.params);
+  }
+  if (req.headers) {
+    req.headers = sanitize(req.headers);
+  }
+
+  // Express 5 can make req.query read-only; avoid assigning to it directly.
+  if (req.query && typeof req.query === "object") {
+    const sanitizedQuery = sanitize(req.query);
+    Object.entries(sanitizedQuery).forEach(([key, value]) => {
+      if (Object.prototype.hasOwnProperty.call(req.query, key)) {
+        try {
+          (req.query as any)[key] = value;
+        } catch {
+          // skip readonly query properties
+        }
+      }
+    });
+  }
+
+  next();
+};
 
 // Rate limiting middleware
 export const apiLimiter = rateLimit({
@@ -22,5 +52,5 @@ export const setupSecurityMiddleware = (app: Application) => {
   app.use(helmet());
 
   // Data sanitization against NoSQL query injection
-  app.use(mongoSanitize());
+  app.use(sanitizeRequest);
 };

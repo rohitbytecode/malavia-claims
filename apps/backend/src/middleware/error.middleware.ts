@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "@/core/errors/AppError.js";
+import { logger } from "@/config/logger.js";
 
 export const errorMiddleware = (
   error: Error,
@@ -7,10 +8,20 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
+  logger.error(error, "Unhandled error");
+
   if (error instanceof AppError) {
     return res.status(error.statusCode).json({
       success: false,
       message: error.message,
+    });
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+      stack: error.stack,
     });
   }
 
