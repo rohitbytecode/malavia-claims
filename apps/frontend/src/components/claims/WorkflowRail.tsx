@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { allowedTransitions } from "../../constants/workflow";
 import { getWorkflowStages } from "../../constants/operations";
 import type { Claim } from "../../types/domain";
-import { labelize } from "../../utils/format";
 import { StatusBadge } from "../ui/StatusBadge";
 
 interface WorkflowRailProps {
