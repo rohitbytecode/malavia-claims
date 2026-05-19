@@ -112,38 +112,43 @@ export class ClaimService {
     remarks?: string,
     performedBy?: string
   ) {
-    const claim = await ClaimRepository.findClaimById(claimId);
+    try {
+      const claim = await ClaimRepository.findClaimById(claimId);
 
-    if (!claim) {
-      throw new AppError("Claim not found", 404);
+      if (!claim) {
+        throw new AppError("Claim not found", 404);
+      }
+
+      validateClaimStatusTransition(claim.type, claim.status, toStatus);
+
+      const updatedClaim = await ClaimRepository.updateClaimStatus(
+        claimId,
+        toStatus,
+        remarks,
+        performedBy
+      );
+
+      if (!updatedClaim) {
+        throw new AppError("Unable to update claim status", 500);
+      }
+
+      await ClaimStatusHistoryRepository.createClaimStatusHistory({
+        claimId: claim._id.toString(),
+        fromStatus: claim.status,
+        toStatus,
+        remarks,
+        changedBy:
+          performedBy && Types.ObjectId.isValid(performedBy)
+            ? new Types.ObjectId(performedBy)
+            : undefined,
+        effectiveAt: new Date(),
+      });
+
+      return toClaimResponse(updatedClaim);
+    } catch (error) {
+      console.error("TRANSITION ERROR:", error);
+      throw error;
     }
-
-    validateClaimStatusTransition(claim.type, claim.status, toStatus);
-
-    const updatedClaim = await ClaimRepository.updateClaimStatus(
-      claimId,
-      toStatus,
-      remarks,
-      performedBy
-    );
-
-    if (!updatedClaim) {
-      throw new AppError("Unable to update claim status", 500);
-    }
-
-    await ClaimStatusHistoryRepository.createClaimStatusHistory({
-      claimId: claim.id,
-      fromStatus: claim.status,
-      toStatus,
-      remarks,
-      changedBy:
-        performedBy && Types.ObjectId.isValid(performedBy)
-          ? new Types.ObjectId(performedBy)
-          : undefined,
-      effectiveAt: new Date(),
-    });
-
-    return toClaimResponse(updatedClaim);
   }
 
   static async getStatusHistory(claimId: string) {

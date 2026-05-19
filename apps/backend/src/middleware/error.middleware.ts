@@ -8,6 +8,7 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
+  console.log("ERROR Middleware HIT:", error.message, error.stack);
   logger.error(error, "Unhandled error");
 
   if (error instanceof AppError) {

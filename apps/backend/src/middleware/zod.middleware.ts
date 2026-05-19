@@ -1,13 +1,30 @@
-import { ZodObject } from "zod";
+import { z } from "zod";
 import { Request, Response, NextFunction } from "express";
 
 export const validate =
-  (schema: ZodObject) => (req: Request, res: Response, next: NextFunction) => {
-    schema.parse({
-      body: req.body,
-      query: req.query,
-      params: req.params,
-    });
+  (schema: z.ZodTypeAny) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = schema.safeParse({
+        body: req.body,
+        query: req.query,
+        params: req.params,
+      });
 
-    next();
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation failed",
+          errors: result.error.issues.map((e) => ({
+            field: e.path.join("."),
+            message: e.message,
+          })),
+        });
+      }
+
+      next();
+    } catch (error) {
+      console.error("VALIDATE MIDDLEWARE ERROR:", error);
+      next(error);
+    }
   };

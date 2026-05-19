@@ -60,15 +60,15 @@ export class ClaimRepository {
     remarks?: string,
     updatedBy?: string
   ) {
-    const update: {
-      status: ClaimStatus;
-      updatedBy?: Types.ObjectId;
-      $push?: { remarks: string };
-    } = { status };
+    const $set: { status: ClaimStatus; updatedBy?: Types.ObjectId } = {
+      status,
+    };
 
     if (updatedBy && Types.ObjectId.isValid(updatedBy)) {
-      update.updatedBy = new Types.ObjectId(updatedBy);
+      $set.updatedBy = new Types.ObjectId(updatedBy);
     }
+
+    const update: Record<string, unknown> = { $set };
 
     if (remarks) {
       update.$push = { remarks };
@@ -76,6 +76,13 @@ export class ClaimRepository {
 
     return ClaimModel.findByIdAndUpdate(claimId, update, {
       new: true,
-    });
+    })
+      .populate("patientId")
+      .populate("insuranceCompanyId")
+      .populate("departmentId")
+      .populate("hospitalId")
+      .populate("createdBy")
+      .populate("updatedBy")
+      .lean();
   }
 }

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { ClaimService } from "@/modules/claims/service/claim.service.js";
 
 export class ClaimController {
@@ -48,31 +48,39 @@ export class ClaimController {
     });
   }
 
-  static async transitionClaimStatus(req: Request, res: Response) {
-    const claimId = Array.isArray(req.params.claimId)
-      ? req.params.claimId[0]
-      : req.params.claimId;
+  static async transitionClaimStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const claimId = Array.isArray(req.params.claimId)
+        ? req.params.claimId[0]
+        : req.params.claimId;
 
-    if (!claimId || claimId === "undefined") {
-      return res.status(400).json({
-        success: false,
-        message: "Missing or invalid claim ID",
+      if (!claimId || claimId === "undefined") {
+        return res.status(400).json({
+          success: false,
+          message: "Missing or invalid claim ID",
+        });
+      }
+
+      const { toStatus, remarks, performedBy } = req.body;
+      const claim = await ClaimService.transitionClaimStatus(
+        claimId,
+        toStatus,
+        remarks,
+        performedBy
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Claim status updated successfully",
+        data: claim,
       });
+    } catch (error) {
+      next(error);
     }
-
-    const { toStatus, remarks, performedBy } = req.body;
-    const claim = await ClaimService.transitionClaimStatus(
-      claimId,
-      toStatus,
-      remarks,
-      performedBy
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Claim status updated successfully",
-      data: claim,
-    });
   }
 
   static async getClaimHistory(req: Request, res: Response) {
