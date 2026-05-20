@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { reportApi } from "../../api/services";
+import { reportApi, patientApi } from "../../api/services";
 import { ErrorPanel } from "../../components/ui/ErrorPanel";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { formatCurrency, labelize } from "../../utils/format";
@@ -47,6 +47,21 @@ export function ReportsPage() {
   const totalAmount =
     monthlyData?.totalAmount ??
     summary.reduce((sum: number, r: any) => sum + (r.totalAmount ?? 0), 0);
+
+  const patientsQuery = useQuery({
+    queryKey: ["patients"],
+    queryFn: () => patientApi.list({ limit: 100 }),
+  });
+
+  const patientMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of patientsQuery.data?.data ?? []) {
+      map.set(p._id, p.name);
+      map.set(p.id, p.name);
+      map.set(p.patientId, p.name);
+    }
+    return map;
+  }, [patientsQuery.data]);
 
   return (
     <div className="page-stack">
@@ -284,7 +299,11 @@ export function ReportsPage() {
                         {claim.claimNumber ||
                           claim.claimId?.toString().slice(-8)}
                       </td>
-                      <td>{claim.patientName?.trim() || "Unknown Patient"}</td>
+                      <td>
+                        {patientMap.get(claim.patientId) ??
+                          claim.patientName?.trim() ??
+                          "Unknown"}
+                      </td>
                       <td>{claim.patientId}</td>
                       <td>{claim.uhid || "-"}</td>
                       <td>{claim.type || "-"}</td>

@@ -51,7 +51,7 @@ export function UsersPage() {
     mutationFn: () => {
       if (!editing) return usersApi.create(draft);
       const { password, ...rest } = draft;
-      return usersApi.update(editing._id, password ? draft : rest);
+      return usersApi.update(editing._id, rest);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users"] });
@@ -139,20 +139,24 @@ export function UsersPage() {
                     Edit
                   </Button>
                   <Button
-  type="button"
-  variant={u.isActive ? "danger" : "success"}
-  onClick={() =>
-    u.isActive
-      ? deactivate.mutate(u._id)
-      : usersApi.update(u._id, { isActive: true }).then(() =>
-          qc.invalidateQueries({ queryKey: ["users"] })
-        )
-  }
-  disabled={isSelf || deactivate.isPending}
-  title={isSelf ? "You cannot deactivate yourself" : undefined}
->
-  {u.isActive ? "Deactivate" : "Activate"}
-</Button>
+                    type="button"
+                    variant={u.isActive ? "danger" : "success"}
+                    onClick={() =>
+                      u.isActive
+                        ? deactivate.mutate(u._id)
+                        : usersApi
+                            .update(u._id, { isActive: true })
+                            .then(() =>
+                              qc.invalidateQueries({ queryKey: ["users"] })
+                            )
+                    }
+                    disabled={isSelf || deactivate.isPending}
+                    title={
+                      isSelf ? "You cannot deactivate yourself" : undefined
+                    }
+                  >
+                    {u.isActive ? "Deactivate" : "Activate"}
+                  </Button>
                 </div>
               );
             },
@@ -197,7 +201,12 @@ export function UsersPage() {
         title={editing ? "Update operator" : "Create operator"}
         onClose={closeModal}
       >
-        <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate();
+          }}
+        >
           <div className="modal-body form-grid-2">
             <Field label="Full name">
               <TextInput
@@ -219,17 +228,19 @@ export function UsersPage() {
                 }
               />
             </Field>
-            <Field label={editing ? "New password (optional)" : "Password"}>
-              <TextInput
-                required={!editing}
-                minLength={8}
-                type="password"
-                value={draft.password}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, password: e.target.value }))
-                }
-              />
-            </Field>
+            {!editing && (
+              <Field label="Password">
+                <TextInput
+                  required
+                  minLength={8}
+                  type="password"
+                  value={draft.password}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, password: e.target.value }))
+                  }
+                />
+              </Field>
+            )}
             <Field label="Role">
               <SelectInput
                 value={draft.role}

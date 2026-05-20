@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { claimsApi } from "../../api/services";
+import { claimsApi, patientApi } from "../../api/services";
 
 import { ClaimCreatePanel } from "../../components/claims/ClaimCreatePanel";
 import { DataTable, type Column } from "../../components/tables/DataTable";
@@ -35,6 +35,8 @@ export function ClaimsListPage() {
 
   const type = (params.get("type") || undefined) as ClaimType | undefined;
 
+  // ✅ ALL hooks must be here, before any early returns
+
   const query = useQuery({
     queryKey: ["claims", page, status, type],
     queryFn: () =>
@@ -45,6 +47,21 @@ export function ClaimsListPage() {
         type,
       }),
   });
+
+  const patientsQuery = useQuery({
+    queryKey: ["patients"],
+    queryFn: () => patientApi.list({ limit: 100 }),
+  });
+
+  const patientMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of patientsQuery.data?.data ?? []) {
+      map.set(p._id, p.name);
+      map.set(p.id, p.name);
+      map.set(p.patientId, p.name);
+    }
+    return map;
+  }, [patientsQuery.data]);
 
   const rows = useMemo(
     () =>
@@ -81,14 +98,15 @@ export function ClaimsListPage() {
 
       cell: (c) => (
         <div>
-          <strong>{c.patientId}</strong>
+          <strong>{patientMap.get(c.patientId) ?? "Unknown"}</strong>
           <span>{c.hospitalId ?? "-"}</span>
         </div>
       ),
 
-      sortValue: (c) => c.patientId ?? "",
+      sortValue: (c) => patientMap.get(c.patientId) ?? "Unknown",
 
-      searchValue: (c) => `${c.patientId ?? ""} ${c.hospitalId ?? ""}`,
+      searchValue: (c) =>
+        `${patientMap.get(c.patientId) ?? "Unknown"} ${c.hospitalId ?? ""}`,
     },
 
     {
@@ -152,6 +170,7 @@ export function ClaimsListPage() {
     },
   ];
 
+  // ✅ Early returns AFTER all hooks
   if (query.isLoading) {
     return <Skeleton rows={8} />;
   }
