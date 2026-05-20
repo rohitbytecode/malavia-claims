@@ -147,7 +147,7 @@ export function ReportsPage() {
       {monthly.isLoading && <Skeleton rows={4} />}
 
       <div className="report-preview">
-        <div className="report-watermark">Malavia Hospital Confidential</div>
+        <div className="report-watermark">Malavia Hospital</div>
 
         {/* Report Header */}
         <div className="report-header">
@@ -160,7 +160,7 @@ export function ReportsPage() {
                 marginBottom: 4,
               }}
             >
-              Malavia Hospital Confidential
+              Malavia Hospital
             </p>
             <h2>Insurance Claims Financial Review</h2>
             <p style={{ marginTop: 4 }}>
