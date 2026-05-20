@@ -10,14 +10,15 @@ import { StatusBadge } from "../ui/StatusBadge";
 
 /* ── Event metadata ── */
 const EVENT_META: Record<
-  TimelineEvent["type"],
+  string,
   {
     icon: string;
     label: string;
     colorVar: string;
   }
 > = {
-  STATUS: { icon: "↗", label: "Status Change", colorVar: "var(--accent)" },
+  STATUS: { icon: "↗", label: "Status Change", colorVar: "var(--accent-primary)" },
+  STATUS_CHANGE: { icon: "↗", label: "Status Change", colorVar: "var(--accent-primary)" },
   COMMUNICATION: {
     icon: "✉",
     label: "Communication",
@@ -48,7 +49,12 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
   /* Group events by date, newest first */
   const { grouped, dayKeys } = useMemo(() => {
     const sorted = [...events]
-      .filter((e) => filter === "ALL" || e.type === filter)
+      .filter(
+        (e) =>
+          filter === "ALL" ||
+          e.type === filter ||
+          (filter === "STATUS" && e.type === "STATUS_CHANGE")
+      )
       .sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -66,7 +72,8 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = { ALL: events.length };
     for (const ev of events) {
-      counts[ev.type] = (counts[ev.type] ?? 0) + 1;
+      const typeKey = ev.type === "STATUS_CHANGE" ? "STATUS" : ev.type;
+      counts[typeKey] = (counts[typeKey] ?? 0) + 1;
     }
     return counts;
   }, [events]);
@@ -106,11 +113,7 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
               className={`timeline__filter-btn${filter === type ? " timeline__filter-btn--active" : ""}`}
               onClick={() => setFilter(type)}
               type="button"
-              style={
-                filter === type && meta
-                  ? { borderColor: meta.colorVar, color: meta.colorVar }
-                  : undefined
-              }
+              data-type={type}
             >
               {meta ? <span>{meta.icon}</span> : null}
               <span>{type === "ALL" ? "All Events" : labelize(type)}</span>
@@ -160,20 +163,10 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
                 <div
                   key={id}
                   className={`timeline__event timeline__event--${ev.type.toLowerCase()}`}
-                  style={
-                    { "--event-color": meta.colorVar } as React.CSSProperties
-                  }
                 >
                   {/* Spine */}
                   <div className="timeline__spine">
-                    <div
-                      className="timeline__icon"
-                      style={{
-                        background: `${meta.colorVar}18`,
-                        borderColor: `${meta.colorVar}40`,
-                        color: meta.colorVar,
-                      }}
-                    >
+                    <div className="timeline__icon">
                       {meta.icon}
                     </div>
                     {idx < (grouped[day]?.length ?? 0) - 1 && (
@@ -190,10 +183,7 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
                       disabled={!hasDetail}
                     >
                       <div className="timeline__card-left">
-                        <span
-                          className="timeline__event-label"
-                          style={{ color: meta.colorVar }}
-                        >
+                        <span className="timeline__event-label">
                           {meta.label}
                         </span>
                         <span className="timeline__event-title">
