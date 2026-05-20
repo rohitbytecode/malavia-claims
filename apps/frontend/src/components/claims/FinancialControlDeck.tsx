@@ -10,7 +10,7 @@ export function FinancialControlDeck({
   settlement?: Settlement | null;
   deposit?: Deposit | null;
 }) {
-  const backendPreview =
+  const netPayable =
     settlement?.netPayable ??
     Math.max(
       0,
@@ -19,69 +19,82 @@ export function FinancialControlDeck({
         (claim.tdsAmount ?? 0) -
         (claim.hospitalDiscount ?? 0)
     );
-  const refundRisk = deposit
-    ? deposit.refundAmount > deposit.collectedAmount
+
+  const hasRefundRisk = deposit
+    ? (deposit.refundAmount ?? 0) > (deposit.collectedAmount ?? 0)
     : false;
 
   return (
-    <section className="financial-deck premium-panel">
-      <div className="panel-title-row">
+    <section className="financial-deck">
+      <div className="deck-header">
         <div>
-          <p className="eyebrow">Financial command deck</p>
+          <p className="eyebrow">FINANCIAL COMMAND DECK</p>
           <h2>Settlement · TDS · Deductions · Refunds</h2>
         </div>
-        <strong className="net-payable">
-          {formatCurrency(backendPreview)}
-        </strong>
+        <div className="net-payable">
+          <span className="net-label">Net Payable</span>
+          <strong>{formatCurrency(netPayable)}</strong>
+        </div>
       </div>
+
       <div className="finance-grid">
-        <div>
+        <div className="finance-item">
           <span>Claimed amount</span>
           <strong>{formatCurrency(claim.totalClaimAmount)}</strong>
         </div>
-        <div>
+        <div className="finance-item">
           <span>TDS</span>
-          <strong>{formatCurrency(settlement?.tds ?? claim.tdsAmount)}</strong>
-        </div>
-        <div>
-          <span>Deductions</span>
           <strong>
-            {formatCurrency(settlement?.deductions ?? claim.deductions)}
+            {formatCurrency(settlement?.tds ?? claim.tdsAmount ?? 0)}
           </strong>
         </div>
-        <div>
+        <div className="finance-item">
+          <span>Deductions</span>
+          <strong>
+            {formatCurrency(settlement?.deductions ?? claim.deductions ?? 0)}
+          </strong>
+        </div>
+        <div className="finance-item">
           <span>Hospital discount</span>
           <strong>
             {formatCurrency(
-              settlement?.hospitalDiscount ?? claim.hospitalDiscount
+              settlement?.hospitalDiscount ?? claim.hospitalDiscount ?? 0
             )}
           </strong>
         </div>
-        <div>
+
+        <div className="finance-item">
           <span>Settlement method</span>
-          <strong>{labelize(settlement?.settlementMethod)}</strong>
+          <strong>{labelize(settlement?.settlementMethod) || "—"}</strong>
         </div>
-        <div>
+        <div className="finance-item">
           <span>Settlement date</span>
-          <strong>{formatDateTime(settlement?.settlementDate)}</strong>
-        </div>
-        <div className={refundRisk ? "finance-risk" : ""}>
-          <span>Collected deposit</span>
           <strong>
-            {formatCurrency(deposit?.collectedAmount ?? claim.depositAmount)}
+            {settlement?.settlementDate
+              ? formatDateTime(settlement.settlementDate)
+              : "—"}
           </strong>
         </div>
-        <div className={refundRisk ? "finance-risk" : ""}>
+
+        <div className={`finance-item ${hasRefundRisk ? "risk" : ""}`}>
+          <span>Collected deposit</span>
+          <strong>
+            {formatCurrency(
+              deposit?.collectedAmount ?? claim.depositAmount ?? 0
+            )}
+          </strong>
+        </div>
+        <div className={`finance-item ${hasRefundRisk ? "risk" : ""}`}>
           <span>Refund amount</span>
           <strong>
-            {formatCurrency(deposit?.refundAmount ?? claim.refundAmount)}
+            {formatCurrency(deposit?.refundAmount ?? claim.refundAmount ?? 0)}
           </strong>
         </div>
       </div>
+
       <p className="validation-note">
-        Frontend mirrors backend restrictions: settlement net payable is
-        server-calculated, allocations must remain within settlement value, and
-        refunds cannot exceed deposits.
+        All calculations follow backend rules. Refunds cannot exceed collected
+        deposits.
       </p>
     </section>
   );

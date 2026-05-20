@@ -306,10 +306,11 @@ hr {
 .eyebrow {
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent-primary);
   font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  margin: 0 0 4px 0;
 }
 
 .muted {
@@ -1788,28 +1789,41 @@ select.input {
   background: var(--surface-0);
   border: 1px solid var(--border);
   border-radius: var(--r-xl);
-  padding: 18px 20px;
+  padding: 24px;
   box-shadow: var(--shadow-sm);
 }
-.financial-deck-header {
+
+.deck-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
-.net-payable-display {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+
+.deck-header h2 {
+  font-size: 18px;
+  margin: 0;
+  color: var(--text-primary);
 }
-.net-payable-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-tertiary);
+
+.net-payable {
+  text-align: right;
+}
+
+.net-payable .net-label {
+  font-size: 11px;
   font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.net-payable strong {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent-primary);
+  line-height: 1;
 }
 .net-payable-value {
   font-family: var(--font-mono);
@@ -1820,8 +1834,27 @@ select.input {
 }
 .finance-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px 24px;
+  margin-bottom: 20px;
+}
+.finance-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.finance-item span {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.finance-item strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.finance-item.risk strong {
+  color: var(--red);
 }
 .finance-cell {
   padding: 12px;
@@ -3692,119 +3725,145 @@ select.input {
 
 /* Workflow rail and action panel */
 .workflow-rail {
-  border: 1px solid var(--border);
-  border-radius: var(--r-2xl);
   background: var(--surface-0);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
   padding: 20px;
-  display: grid;
-  gap: 18px;
-}
-.workflow-rail__header,
-.workflow-rail__status,
-.workflow-rail__next,
-.workflow-rail__next-chips {
+  box-shadow: var(--shadow-sm);
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 20px;
 }
+
 .workflow-rail__header {
+  display: flex;
   justify-content: space-between;
+  align-items: center;
 }
-.workflow-rail__header h2 {
-  font-size: 20px;
-}
-.workflow-rail__terminal-badge,
-.workflow-rail__no-transitions,
-.workflow-rail__next-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
+
 .workflow-rail__progress-track {
   position: relative;
-  height: 12px;
-  border-radius: 999px;
+  height: 8px;
   background: var(--surface-2);
+  border-radius: 999px;
   overflow: hidden;
 }
+
 .workflow-rail__progress-fill {
   height: 100%;
-  border-radius: inherit;
   background: linear-gradient(90deg, var(--accent-primary), #7c3aed);
-  box-shadow: 0 0 22px var(--accent-primary);
+  border-radius: inherit;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 12px var(--accent-primary);
 }
+
 .workflow-rail__progress-label {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--text-inverse);
+  right: 8px;
+  top: -18px;
+  font-size: 11px;
   font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 900;
-  mix-blend-mode: difference;
+  color: var(--text-tertiary);
+  font-weight: 700;
 }
+
+/* Groups */
 .workflow-rail__groups {
-  display: grid;
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
+
 .workflow-rail__group {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
+
 .workflow-rail__group-label {
-  color: var(--text-tertiary);
-  font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 800;
+  font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
 }
+
 .workflow-rail__group-stages {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
 }
+
+/* Stage Card */
 .workflow-stage {
-  min-height: 104px;
-  padding: 12px;
-  border-radius: 18px;
+  padding: 14px;
+  border-radius: 16px;
   border: 1px solid var(--border);
   background: var(--surface-1);
   display: grid;
-  grid-template-columns: 34px 1fr;
-  gap: 10px;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  min-height: 108px;
+  transition: all 0.25s ease;
+  position: relative;
 }
+
+.workflow-stage--active {
+  border-color: var(--accent-primary);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
 .workflow-stage--complete {
-  border-color: var(--green-border);
+  border-color: var(--green);
   background: var(--green-bg);
 }
-.workflow-stage--active,
+
 .workflow-stage--possible {
-  border-color: var(--border-accent);
-  background: var(--accent-soft);
+  border-style: dashed;
+  border-color: var(--amber);
 }
-.workflow-stage--critical {
-  border-color: var(--red-border);
+
+.workflow-stage--pending {
+  opacity: 0.6;
 }
-.workflow-stage__dot-wrap,
-.workflow-stage__dot {
+
+/* Dot */
+.workflow-stage__dot-wrap {
   display: grid;
   place-items: center;
 }
+
 .workflow-stage__dot {
-  width: 30px;
-  height: 30px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2.5px solid var(--border);
   background: var(--surface-0);
-  color: var(--accent-primary);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
   font-weight: 900;
+  color: var(--text-tertiary);
+  transition: all 0.25s ease;
 }
+
+.workflow-stage--active .workflow-stage__dot {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary);
+  color: white;
+  box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.2);
+}
+
+.workflow-stage--complete .workflow-stage__dot {
+  border-color: var(--green);
+  background: var(--green);
+  color: white;
+}
+
 .workflow-stage__pulse {
   width: 10px;
   height: 10px;
@@ -3812,21 +3871,90 @@ select.input {
   background: var(--accent-primary);
   box-shadow:
     0 0 0 6px var(--accent-ring),
-    0 0 18px var(--accent-primary);
+    0 0 20px var(--accent-primary);
+  animation: dot-pulse 1.6s ease infinite;
 }
+
+@keyframes dot-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px var(--accent-ring),
+      0 0 12px var(--accent-primary);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px var(--accent-ring),
+      0 0 24px var(--accent-primary);
+  }
+}
+
+/* Label */
 .workflow-stage__info {
-  display: grid;
-  gap: 6px;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
 }
+
 .workflow-stage__label {
-  font-size: 12px;
-  font-weight: 850;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--text-secondary);
 }
+
+.workflow-stage--active .workflow-stage__label,
+.workflow-stage--possible .workflow-stage__label {
+  color: var(--accent-primary);
+}
+
+.workflow-stage--complete .workflow-stage__label {
+  color: var(--green);
+}
+
+/* Terminal / Special States */
 .workflow-stage__terminal-mark {
+  font-size: 11px;
   color: var(--red);
   font-family: var(--font-mono);
-  font-size: 9px;
+}
+
+/* Next Transitions */
+.workflow-rail__next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.workflow-rail__next-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  font-weight: 700;
+}
+
+.workflow-rail__next-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Backend Allowed Transitions Pill */
+.workflow-rail__terminal-badge {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--amber);
+  background: var(--amber-bg);
+  border: 1px solid var(--amber);
+  border-radius: 999px;
+  padding: 3px 10px;
 }
 .action-panel {
   position: sticky;
@@ -3884,11 +4012,14 @@ select.input {
 .action-panel__guardrails,
 .audit-warning,
 .validation-note {
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-tertiary);
   background: var(--surface-1);
-  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 12px 16px;
+  line-height: 1.4;
+  margin: 0;
 }
 .action-panel__restriction--critical,
 .audit-warning {

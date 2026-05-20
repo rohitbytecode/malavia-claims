@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { claimsApi, patientApi } from "../../api/services";
+import { claimsApi, patientApi, doctorApi } from "../../api/services";
 
 import { ClaimCreatePanel } from "../../components/claims/ClaimCreatePanel";
 import { DataTable, type Column } from "../../components/tables/DataTable";
@@ -56,12 +56,26 @@ export function ClaimsListPage() {
   const patientMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const p of patientsQuery.data?.data ?? []) {
-      map.set(p._id, p.name);
-      map.set(p.id, p.name);
-      map.set(p.patientId, p.name);
+      if (p._id) map.set(p._id, p.name);
+      if (p.id) map.set(p.id, p.name);
+      if (p.patientId) map.set(p.patientId, p.name);
     }
     return map;
   }, [patientsQuery.data]);
+
+  const doctorsQuery = useQuery({
+    queryKey: ["doctors"],
+    queryFn: () => doctorApi.list({ limit: 100 }),
+  });
+
+  const doctorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const d of doctorsQuery.data?.data ?? []) {
+      if (d.id) map.set(d.id, d.name);
+      if (d._id) map.set(d._id, d.name);
+    }
+    return map;
+  }, [doctorsQuery.data]);
 
   const rows = useMemo(
     () =>
@@ -155,9 +169,24 @@ export function ClaimsListPage() {
       key: "department",
       header: "Department",
 
-      cell: (c) => nameOf(c.departmentId),
+      cell: (c) =>
+        typeof c.department === "object" && c.department
+          ? c.department.name
+          : "—",
 
       sortValue: (c) => nameOf(c.departmentId),
+    },
+
+    {
+      key: "doctor",
+      header: "Doctor",
+      cell: (c) => {
+        const name =
+          typeof c.doctor === "object" && c.doctor ? c.doctor.name : null;
+        return name ? `Dr. ${name}` : "—";
+      },
+      sortValue: (c) =>
+        typeof c.doctor === "object" && c.doctor ? c.doctor.name : "",
     },
 
     {
@@ -170,7 +199,6 @@ export function ClaimsListPage() {
     },
   ];
 
-  // ✅ Early returns AFTER all hooks
   if (query.isLoading) {
     return <Skeleton rows={8} />;
   }

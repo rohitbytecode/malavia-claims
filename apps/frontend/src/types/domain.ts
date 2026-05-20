@@ -119,6 +119,7 @@ export interface Claim {
   patientId: string;
   hospitalId: string;
   departmentId?: string | Department;
+  department?: Department | string | null;
   doctorId?: string;
   doctor?: Doctor | string | null;
   totalClaimAmount: number;
