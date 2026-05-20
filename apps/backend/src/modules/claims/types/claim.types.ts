@@ -11,6 +11,7 @@ export interface ClaimBase {
   patientId: string;
   hospitalId?: Types.ObjectId;
   departmentId?: Types.ObjectId;
+  doctorId?: Types.ObjectId;
   totalClaimAmount: number;
   tdsAmount: number;
   deductions: number;

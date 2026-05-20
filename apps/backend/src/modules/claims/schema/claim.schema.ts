@@ -48,6 +48,10 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
     },
+    doctorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Doctor",
+    },
     totalClaimAmount: {
       type: Number,
       required: true,

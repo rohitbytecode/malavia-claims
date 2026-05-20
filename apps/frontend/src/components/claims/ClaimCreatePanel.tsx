@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import type { z } from "zod";
 
-import { claimsApi, patientApi, departmentApi, insuranceApi } from "../../api/services";
+import { claimsApi, patientApi, departmentApi, insuranceApi, doctorApi } from "../../api/services";
 import { claimTypes } from "../../constants/workflow";
 import { Field, SelectInput, TextArea, TextInput } from "../forms/FormField";
 import { Button } from "../ui/Button";
@@ -36,6 +36,11 @@ export function ClaimCreatePanel() {
     queryFn: () => insuranceApi.list({ isActive: true, limit: 100 }),
   });
 
+  const doctorsQuery = useQuery({
+    queryKey: ["doctors", "active"],
+    queryFn: () => doctorApi.list({ isActive: true, limit: 100 }),
+  });
+
   const {
     register,
     handleSubmit,
@@ -52,6 +57,7 @@ export function ClaimCreatePanel() {
       insurerId: "",
       insuranceCompanyId: "",
       departmentId: "",
+      doctorId: "",
     },
   });
 
@@ -74,6 +80,23 @@ export function ClaimCreatePanel() {
       setValue("insurerId", "");
     }
   }, [selectedPatient, setValue]);
+
+  const watchedDoctorId = watch("doctorId");
+
+  const selectedDoctor = doctorsQuery.data?.data?.find(
+    (d) => (d.id || d._id) === watchedDoctorId
+  );
+
+  useEffect(() => {
+    if (selectedDoctor) {
+      const deptIdVal = typeof selectedDoctor.department === "object" && selectedDoctor.department
+        ? selectedDoctor.department._id
+        : selectedDoctor.departmentId || "";
+      setValue("departmentId", deptIdVal);
+    } else {
+      setValue("departmentId", "");
+    }
+  }, [selectedDoctor, setValue]);
 
   const mutation = useMutation({
     mutationFn: claimsApi.create,
@@ -149,6 +172,17 @@ export function ClaimCreatePanel() {
             {insuranceQuery.data?.data?.map((ins) => (
               <option key={ins._id} value={ins._id}>
                 {ins.name}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+
+        <Field label="Doctor" error={errors.doctorId?.message}>
+          <SelectInput {...register("doctorId")} defaultValue="">
+            <option value="">Select doctor...</option>
+            {doctorsQuery.data?.data?.map((doc) => (
+              <option key={doc.id || doc._id} value={doc.id || doc._id}>
+                Dr. {doc.name}
               </option>
             ))}
           </SelectInput>

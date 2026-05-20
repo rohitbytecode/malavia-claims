@@ -148,6 +148,12 @@ export function ClaimDetailsPage() {
               <dd>{data.patientId}</dd>
               <dt>Insurance company</dt>
               <dd>{nameOf(data.insuranceCompanyId)}</dd>
+              {data.doctor && (
+                <>
+                  <dt>Doctor</dt>
+                  <dd>Dr. {typeof data.doctor === "object" ? data.doctor.name : data.doctor}</dd>
+                </>
+              )}
               <dt>Department</dt>
               <dd>{nameOf(data.departmentId)}</dd>
               <dt>Created by</dt>

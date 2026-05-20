@@ -119,6 +119,8 @@ export interface Claim {
   patientId: string;
   hospitalId: string;
   departmentId?: string | Department;
+  doctorId?: string;
+  doctor?: Doctor | string | null;
   totalClaimAmount: number;
   tdsAmount?: number;
   deductions?: number;
@@ -230,6 +232,16 @@ export interface Patient {
   insurerId?: string;
   insuranceCompanyId?: string;
   insuranceCompany?: InsuranceCompany | string | null;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+export interface Doctor {
+  _id: string;
+  id: string;
+  name: string;
+  departmentId?: string;
+  department?: Department | string | null;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;

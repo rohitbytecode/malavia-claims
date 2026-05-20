@@ -146,6 +146,13 @@ const NAV_ITEMS: {
     group: "operations",
   },
   {
+    to: "/doctors",
+    label: "Doctors",
+    icon: "users",
+    roles: operationalRoles,
+    group: "operations",
+  },
+  {
     to: "/alerts",
     label: "Alerts",
     icon: "alerts",

@@ -10,6 +10,7 @@ import { InsurancePage } from "../pages/insurance/InsurancePage";
 import { DepartmentsPage } from "../pages/departments/DepartmentsPage";
 import { UsersPage } from "../pages/users/UsersPage";
 import { PatientsPage } from "../pages/patients/PatientsPage";
+import { DoctorsPage } from "../pages/doctors/DoctorsPage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
 import { AppLayout } from "../layouts/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -49,6 +50,16 @@ export function AppRoutes() {
           <ProtectedRoute roles={operationalRoles}>
             <AppLayout>
               <PatientsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/doctors"
+        element={
+          <ProtectedRoute roles={operationalRoles}>
+            <AppLayout>
+              <DoctorsPage />
             </AppLayout>
           </ProtectedRoute>
         }

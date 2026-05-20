@@ -10,6 +10,7 @@ export const claimSchema = z.object({
   patientId: z.string().min(1),
   hospitalId: z.string().optional(),
   departmentId: z.string().optional(),
+  doctorId: z.string().optional(),
   totalClaimAmount: z.coerce.number().nonnegative(),
   depositAmount: z.coerce.number().nonnegative().optional(),
   remarks: z.string().optional(),
@@ -37,3 +38,20 @@ export const communicationSchema = z.object({
   remarks: z.string().min(2),
   followUpDate: z.string().optional(),
 });
+export const doctorSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Doctor name is required")
+    .refine(
+      (val) => {
+        const normalized = val.toLowerCase();
+        return !(normalized.startsWith("dr.") || normalized.startsWith("dr "));
+      },
+      {
+        message: "Doctor name should not start with 'Dr.' or 'dr.' prefix",
+      }
+    ),
+  departmentId: z.string().min(1, "Department is required"),
+});
+

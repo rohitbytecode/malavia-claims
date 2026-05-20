@@ -13,6 +13,7 @@ import type {
   Deposit,
   InsuranceCompany,
   Patient,
+  Doctor,
   ListParams,
   Paginated,
   ReportRow,
@@ -68,6 +69,7 @@ export const claimsApi = {
     patientId: string;
     hospitalId?: string;
     departmentId?: string;
+    doctorId?: string;
     totalClaimAmount: number;
     depositAmount?: number;
     remarks?: string;
@@ -236,6 +238,27 @@ export const patientApi = {
   ) => unwrap<Patient>(apiClient.patch(`/patients/${id}`, body)),
   remove: (id: string) =>
     unwrap<Patient>(apiClient.delete(`/patients/${id}`)),
+};
+export const doctorApi = {
+  list: (params: ListParams = {}) =>
+    unwrap<Paginated<Doctor> | Doctor[]>(
+      apiClient.get("/doctors", { params })
+    ).then(normalized),
+  create: (body: {
+    name: string;
+    departmentId: string;
+    isActive?: boolean;
+  }) => unwrap<Doctor>(apiClient.post("/doctors", body)),
+  update: (
+    id: string,
+    body: Partial<{
+      name: string;
+      departmentId: string;
+      isActive: boolean;
+    }>
+  ) => unwrap<Doctor>(apiClient.patch(`/doctors/${id}`, body)),
+  remove: (id: string) =>
+    unwrap<Doctor>(apiClient.delete(`/doctors/${id}`)),
 };
 export const insuranceApi = {
   list: (params: ListParams = {}) =>

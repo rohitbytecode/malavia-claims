@@ -17,6 +17,7 @@ interface CreateClaimPayload {
   patientId: string | any;
   hospitalId?: string;
   departmentId?: string;
+  doctorId?: string;
   totalClaimAmount: number;
   tdsAmount?: number;
   deductions?: number;
@@ -55,6 +56,10 @@ export class ClaimService {
       departmentId:
         payload.departmentId && Types.ObjectId.isValid(payload.departmentId)
           ? new Types.ObjectId(payload.departmentId)
+          : undefined,
+      doctorId:
+        payload.doctorId && Types.ObjectId.isValid(payload.doctorId)
+          ? new Types.ObjectId(payload.doctorId)
           : undefined,
       totalClaimAmount: payload.totalClaimAmount,
       tdsAmount: payload.tdsAmount ?? 0,

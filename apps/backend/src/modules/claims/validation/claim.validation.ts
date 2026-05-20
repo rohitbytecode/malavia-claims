@@ -9,6 +9,7 @@ const createClaimBodySchema = z.object({
   patientId: z.string().trim(),
   hospitalId: z.string().trim().optional(),
   departmentId: z.string().trim().optional(),
+  doctorId: z.string().trim().optional(),
   totalClaimAmount: z.number().nonnegative(),
   tdsAmount: z.number().nonnegative().optional().default(0),
   deductions: z.number().nonnegative().optional().default(0),

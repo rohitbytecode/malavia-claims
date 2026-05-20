@@ -26,6 +26,8 @@ export const toClaimResponse = (claim: any) => {
 
     department: mapRelation(claimObject.departmentId),
 
+    doctor: mapRelation(claimObject.doctorId),
+
     totalClaimAmount: claimObject.totalClaimAmount,
 
     tdsAmount: claimObject.tdsAmount,
