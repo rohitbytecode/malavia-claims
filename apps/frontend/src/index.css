@@ -2630,6 +2630,50 @@ select.input {
   color: #94a3b8;
 }
 
+/* Dark theme adjustments for the on-screen Report/PDF preview */
+:root[data-theme="dark"] .report-preview {
+  background: var(--surface-0);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+:root[data-theme="dark"] .report-watermark {
+  color: rgba(255, 255, 255, 0.03);
+}
+:root[data-theme="dark"] .report-header {
+  border-bottom-color: var(--accent-primary);
+}
+:root[data-theme="dark"] .report-header h2 {
+  color: var(--text-primary);
+}
+:root[data-theme="dark"] .report-header p {
+  color: var(--text-secondary);
+}
+:root[data-theme="dark"] .report-summary-cell {
+  border-color: var(--border);
+  background: var(--surface-1);
+}
+:root[data-theme="dark"] .report-summary-cell span {
+  color: var(--text-tertiary);
+}
+:root[data-theme="dark"] .report-summary-cell strong {
+  color: var(--accent-primary);
+}
+:root[data-theme="dark"] .report-table th {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border-bottom-color: var(--border);
+}
+:root[data-theme="dark"] .report-table td {
+  border-bottom-color: var(--border);
+  color: var(--text-secondary);
+}
+:root[data-theme="dark"] .report-table tbody tr:hover td {
+  background: var(--surface-1);
+}
+:root[data-theme="dark"] .report-footer {
+  border-top-color: var(--border);
+}
+
 /* ============================================================
    SKELETON LOADING
    ============================================================ */
@@ -2809,7 +2853,8 @@ select.input {
   .link-button,
   .dropzone,
   .communication-form,
-  .quick-form {
+  .quick-form,
+  .no-print {
     display: none !important;
   }
   body {
@@ -2827,9 +2872,48 @@ select.input {
     border: 1px solid #ddd !important;
   }
   .report-preview {
-    box-shadow: none;
-    border: none;
-    padding: 0;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #1a1a2e !important;
+  }
+  .report-watermark {
+    color: rgba(26, 58, 143, 0.06) !important;
+  }
+  .report-header {
+    border-bottom: 2px solid #1a3a8f !important;
+  }
+  .report-header h2 {
+    color: #1a3a8f !important;
+  }
+  .report-header p {
+    color: #64748b !important;
+  }
+  .report-summary-cell {
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+  }
+  .report-summary-cell span {
+    color: #94a3b8 !important;
+  }
+  .report-summary-cell strong {
+    color: #1a3a8f !important;
+  }
+  .report-table th {
+    background: #eef2ff !important;
+    color: #1a3a8f !important;
+    border-bottom: 1px solid #c7d2fe !important;
+  }
+  .report-table td {
+    border-bottom: 1px solid #e2e8f0 !important;
+    color: #334155 !important;
+  }
+  .report-table tbody tr:hover td {
+    background: transparent !important;
+  }
+  .report-footer {
+    border-top: 1px solid #cbd5e0 !important;
   }
   * {
     color-scheme: light !important;

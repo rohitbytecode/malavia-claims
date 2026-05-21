@@ -22,12 +22,31 @@ export class ReportService {
     return ClaimModel.aggregate([
       { $match: { insuranceCompanyId: { $exists: true, $ne: null } } },
       {
+        $lookup: {
+          from: "settlements",
+          localField: "_id",
+          foreignField: "claimId",
+          as: "settlement",
+        },
+      },
+      {
         $group: {
           _id: "$insuranceCompanyId",
           totalClaims: { $sum: 1 },
           totalClaimAmount: { $sum: "$totalClaimAmount" },
           settledClaims: {
-            $sum: { $cond: [{ $eq: ["$status", "SETTLED"] }, 1, 0] },
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: ["$status", "SETTLED"] },
+                    { $gt: [{ $size: "$settlement" }, 0] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
           },
         },
       },
@@ -47,7 +66,15 @@ export class ReportService {
           totalClaimAmount: 1,
           settledClaims: 1,
           settlementRatio: {
-            $multiply: [{ $divide: ["$settledClaims", "$totalClaims"] }, 100],
+            $multiply: [
+              {
+                $divide: [
+                  "$settledClaims",
+                  { $cond: [{ $eq: ["$totalClaims", 0] }, 1, "$totalClaims"] },
+                ],
+              },
+              100,
+            ],
           },
         },
       },
@@ -111,6 +138,8 @@ export class ReportService {
           // Claim Fields
           type: "$type",
           status: "$status",
+          doctorId: "$doctorId",
+          departmentId: "$departmentId",
           totalClaimAmount: { $ifNull: ["$totalClaimAmount", 0] },
           depositAmount: "$depositAmount",
           approvedAmount: "$approvedAmount",

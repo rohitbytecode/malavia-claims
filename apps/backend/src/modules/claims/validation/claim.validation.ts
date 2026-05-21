@@ -32,7 +32,7 @@ export const listClaimsSchema = z.object({
     status: z.nativeEnum(ClaimStatus).optional(),
     type: z.nativeEnum(ClaimType).optional(),
     page: z.coerce.number().int().positive().default(1),
-    limit: z.coerce.number().int().positive().max(100).default(20),
+    limit: z.coerce.number().int().positive().max(1000).default(20),
   }),
   params: z.object({}).optional(),
 });

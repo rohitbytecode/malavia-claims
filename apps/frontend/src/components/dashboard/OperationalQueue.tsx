@@ -99,6 +99,21 @@ export function OperationalQueue({
           );
         })}
       </div>
+      <div
+        style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}
+      >
+        <Link
+          to="/claims"
+          className="btn btn-secondary"
+          style={{
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+          }}
+        >
+          View all claims
+        </Link>
+      </div>
     </section>
   );
 }

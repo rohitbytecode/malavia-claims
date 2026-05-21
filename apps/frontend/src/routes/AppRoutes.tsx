@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage } from "../pages/auth/LoginPage";
 import { DashboardPage } from "../pages/dashboard/DashboardPage";
 import { ClaimsListPage } from "../pages/claims/ClaimsListPage";
+import { AllClaimsPage } from "../pages/claims/AllClaimsPage";
 import { ClaimDetailsPage } from "../pages/claims/ClaimDetailsPage";
 import { SettlementsPage } from "../pages/settlements/SettlementsPage";
 import { ReportsPage } from "../pages/reports/ReportsPage";
@@ -40,6 +41,16 @@ export function AppRoutes() {
           <ProtectedRoute roles={operationalRoles}>
             <AppLayout>
               <ClaimsListPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/claims/all"
+        element={
+          <ProtectedRoute roles={operationalRoles}>
+            <AppLayout>
+              <AllClaimsPage />
             </AppLayout>
           </ProtectedRoute>
         }

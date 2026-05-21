@@ -1,6 +1,11 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { reportApi, patientApi } from "../../api/services";
+import {
+  reportApi,
+  patientApi,
+  doctorApi,
+  departmentApi,
+} from "../../api/services";
 import { ErrorPanel } from "../../components/ui/ErrorPanel";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { formatCurrency, labelize } from "../../utils/format";
@@ -11,6 +16,19 @@ export function ReportsPage() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [patientId, setPatientId] = useState("");
   const [patientInput, setPatientInput] = useState("");
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
+    {
+      claimNo: true,
+      patientId: true,
+      patientName: true,
+      doctorName: true,
+      department: true,
+      type: true,
+      status: true,
+      claimAmount: true,
+      deposit: true,
+    }
+  );
 
   const monthly = useQuery({
     queryKey: ["reports", "monthly", year, month],
@@ -62,6 +80,114 @@ export function ReportsPage() {
     }
     return map;
   }, [patientsQuery.data]);
+
+  const doctorsQuery = useQuery({
+    queryKey: ["doctors"],
+    queryFn: () => doctorApi.list({ limit: 100 }),
+  });
+
+  const doctorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const d of doctorsQuery.data?.data ?? []) {
+      map.set(d._id, d.name);
+      map.set(d.id, d.name);
+    }
+    return map;
+  }, [doctorsQuery.data]);
+
+  const departmentsQuery = useQuery({
+    queryKey: ["departments"],
+    queryFn: () => departmentApi.list({ limit: 100 }),
+  });
+
+  const departmentMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const d of departmentsQuery.data?.data ?? []) {
+      map.set(d._id, d.name);
+    }
+    return map;
+  }, [departmentsQuery.data]);
+
+  const handleExportExcel = () => {
+    const activeCols = [
+      { key: "claimNo", label: "Claim No." },
+      { key: "patientId", label: "Patient ID" },
+      { key: "patientName", label: "Patient name" },
+      { key: "doctorName", label: "Doctor name" },
+      { key: "department", label: "department" },
+      { key: "type", label: "Type" },
+      { key: "status", label: "Status" },
+      { key: "claimAmount", label: "Claim amount" },
+      { key: "deposit", label: "deposit" },
+    ].filter((col) => visibleColumns[col.key]);
+
+    const headers = activeCols
+      .map((col) => `"${col.label.replace(/"/g, '""')}"`)
+      .join(",");
+
+    const rows = detailedClaims.map((claim: any) => {
+      return activeCols
+        .map((col) => {
+          let val = "";
+          switch (col.key) {
+            case "claimNo":
+              val =
+                claim.claimNumber || claim.claimId?.toString().slice(-8) || "";
+              break;
+            case "patientId":
+              val = claim.patientId || "";
+              break;
+            case "patientName":
+              val =
+                patientMap.get(claim.patientId) ??
+                claim.patientName?.trim() ??
+                "Unknown";
+              break;
+            case "doctorName":
+              val = doctorMap.get(claim.doctorId)
+                ? `Dr. ${doctorMap.get(claim.doctorId)}`
+                : typeof claim.doctor === "object" && claim.doctor?.name
+                  ? `Dr. ${claim.doctor.name}`
+                  : "—";
+              break;
+            case "department":
+              val = departmentMap.get(claim.departmentId)
+                ? departmentMap.get(claim.departmentId)!
+                : typeof claim.department === "object" && claim.department?.name
+                  ? claim.department.name
+                  : "—";
+              break;
+            case "type":
+              val = claim.type || "—";
+              break;
+            case "status":
+              val = labelize(claim.status) || "";
+              break;
+            case "claimAmount":
+              val = claim.totalClaimAmount?.toString() || "0";
+              break;
+            case "deposit":
+              val = claim.depositAmount?.toString() || "0";
+              break;
+          }
+          return `"${val.toString().replace(/"/g, '""')}"`;
+        })
+        .join(",");
+    });
+
+    const csvContent = "\uFEFF" + [headers, ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `detailed_claims_${year}_${month.toString().padStart(2, "0")}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="page-stack">
@@ -142,13 +268,23 @@ export function ReportsPage() {
           </button>
         </div>
 
-        <button
-          className="btn btn-primary"
-          type="button"
-          onClick={() => window.print()}
-        >
-          Export PDF / Print
-        </button>
+        <div style={{ display: "flex", gap: "8px" }} className="no-print">
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={() => window.print()}
+          >
+            Export PDF / Print
+          </button>
+          <button
+            className="btn btn-success"
+            type="button"
+            onClick={handleExportExcel}
+            disabled={detailedClaims.length === 0}
+          >
+            Export as Excel
+          </button>
+        </div>
       </section>
 
       {monthly.isError && <ErrorPanel error={monthly.error} />}
@@ -277,52 +413,162 @@ export function ReportsPage() {
               Detailed Claims — {month.toString().padStart(2, "0")}/{year}
             </h3>
 
+            <div
+              className="no-print"
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "8px 12px",
+                padding: "12px 16px",
+                background: "var(--surface-1)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r-xl)",
+                marginBottom: "18px",
+                alignItems: "center",
+                boxShadow: "var(--shadow-sm)",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  color: "var(--text-tertiary)",
+                  marginRight: "6px",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                Toggle Columns:
+              </span>
+              {[
+                { key: "claimNo", label: "Claim No." },
+                { key: "patientId", label: "Patient ID" },
+                { key: "patientName", label: "Patient name" },
+                { key: "doctorName", label: "Doctor name" },
+                { key: "department", label: "department" },
+                { key: "type", label: "Type" },
+                { key: "status", label: "Status" },
+                { key: "claimAmount", label: "Claim amount" },
+                { key: "deposit", label: "deposit" },
+              ].map((col) => (
+                <label
+                  key={col.key}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: visibleColumns[col.key]
+                      ? "var(--text-primary)"
+                      : "var(--text-tertiary)",
+                    cursor: "pointer",
+                    padding: "4px 10px",
+                    borderRadius: "20px",
+                    background: visibleColumns[col.key]
+                      ? "color-mix(in srgb, var(--accent-primary) 12%, transparent)"
+                      : "transparent",
+                    border: "1px solid",
+                    borderColor: visibleColumns[col.key]
+                      ? "color-mix(in srgb, var(--accent-primary) 30%, transparent)"
+                      : "var(--border)",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={visibleColumns[col.key]}
+                    onChange={(e) =>
+                      setVisibleColumns((prev) => ({
+                        ...prev,
+                        [col.key]: e.target.checked,
+                      }))
+                    }
+                    style={{
+                      accentColor: "var(--accent-primary)",
+                      cursor: "pointer",
+                      width: "14px",
+                      height: "14px",
+                    }}
+                  />
+                  {col.label}
+                </label>
+              ))}
+            </div>
+
             <div style={{ overflowX: "auto", marginBottom: 32 }}>
               <table className="report-table">
                 <thead>
                   <tr>
-                    <th>Claim No.</th>
-                    <th>Patient Name</th>
-                    <th>Patient ID</th>
-                    <th>UHID</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Claim Amount</th>
-                    <th>Deposit</th>
-                    <th>Date</th>
+                    {visibleColumns.claimNo && <th>Claim No.</th>}
+                    {visibleColumns.patientId && <th>Patient ID</th>}
+                    {visibleColumns.patientName && <th>Patient name</th>}
+                    {visibleColumns.doctorName && <th>Doctor name</th>}
+                    {visibleColumns.department && <th>department</th>}
+                    {visibleColumns.type && <th>Type</th>}
+                    {visibleColumns.status && <th>Status</th>}
+                    {visibleColumns.claimAmount && <th>Claim amount</th>}
+                    {visibleColumns.deposit && <th>deposit</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {detailedClaims.map((claim: any) => (
                     <tr key={claim.claimId}>
-                      <td>
-                        {claim.claimNumber ||
-                          claim.claimId?.toString().slice(-8)}
-                      </td>
-                      <td>
-                        {patientMap.get(claim.patientId) ??
-                          claim.patientName?.trim() ??
-                          "Unknown"}
-                      </td>
-                      <td>{claim.patientId}</td>
-                      <td>{claim.uhid || "-"}</td>
-                      <td>{claim.type || "-"}</td>
-                      <td>
-                        <span
-                          className={`status-badge ${claim.status?.toLowerCase() || ""}`}
-                        >
-                          {labelize(claim.status)}
-                        </span>
-                      </td>
-                      <td style={{ fontWeight: 600, textAlign: "right" }}>
-                        {formatCurrency(claim.totalClaimAmount)}
-                      </td>
-                      <td style={{ textAlign: "right" }}>
-                        {formatCurrency(claim.depositAmount || 0)}
-                      </td>
-                      <td>
-                        {new Date(claim.createdAt).toLocaleDateString("en-IN")}
-                      </td>
+                      {visibleColumns.claimNo && (
+                        <td>
+                          {claim.claimNumber ||
+                            claim.claimId?.toString().slice(-8)}
+                        </td>
+                      )}
+                      {visibleColumns.patientId && <td>{claim.patientId}</td>}
+                      {visibleColumns.patientName && (
+                        <td>
+                          {patientMap.get(claim.patientId) ??
+                            claim.patientName?.trim() ??
+                            "Unknown"}
+                        </td>
+                      )}
+                      {visibleColumns.doctorName && (
+                        <td>
+                          {doctorMap.get(claim.doctorId)
+                            ? `Dr. ${doctorMap.get(claim.doctorId)}`
+                            : typeof claim.doctor === "object" &&
+                                claim.doctor?.name
+                              ? `Dr. ${claim.doctor.name}`
+                              : "—"}
+                        </td>
+                      )}
+                      {visibleColumns.department && (
+                        <td>
+                          {departmentMap.get(claim.departmentId)
+                            ? departmentMap.get(claim.departmentId)
+                            : typeof claim.department === "object" &&
+                                claim.department?.name
+                              ? claim.department.name
+                              : "—"}
+                        </td>
+                      )}
+                      {visibleColumns.type && <td>{claim.type || "—"}</td>}
+                      {visibleColumns.status && (
+                        <td>
+                          <span
+                            className={`status-badge ${claim.status?.toLowerCase() || ""}`}
+                          >
+                            {labelize(claim.status)}
+                          </span>
+                        </td>
+                      )}
+                      {visibleColumns.claimAmount && (
+                        <td style={{ fontWeight: 600, textAlign: "right" }}>
+                          {formatCurrency(claim.totalClaimAmount)}
+                        </td>
+                      )}
+                      {visibleColumns.deposit && (
+                        <td style={{ textAlign: "right" }}>
+                          {formatCurrency(claim.depositAmount || 0)}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
