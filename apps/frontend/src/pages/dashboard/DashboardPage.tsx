@@ -143,9 +143,9 @@ export function DashboardPage() {
             </div>
           </div>
           <div className="cron-note">
-            Daily backend checks generate courier, settlement, and refund
-            alerts; this panel shows where those automated escalations will
-            intensify.
+            Daily system checks generate alerts on claims that are overdue for
+            courier, settlement, or refund; this panel shows where automated
+            escalations will intensify.
           </div>
         </Card>
       </div>

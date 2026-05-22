@@ -56,14 +56,23 @@ export class ClaimRepository {
     claimId: string,
     status: ClaimStatus,
     remarks?: string,
-    updatedBy?: string
+    updatedBy?: string,
+    claimNumber?: string
   ) {
-    const $set: { status: ClaimStatus; updatedBy?: Types.ObjectId } = {
+    const $set: {
+      status: ClaimStatus;
+      updatedBy?: Types.ObjectId;
+      claimNumber?: string;
+    } = {
       status,
     };
 
     if (updatedBy && Types.ObjectId.isValid(updatedBy)) {
       $set.updatedBy = new Types.ObjectId(updatedBy);
+    }
+
+    if (claimNumber) {
+      $set.claimNumber = claimNumber;
     }
 
     const update: Record<string, unknown> = { $set };

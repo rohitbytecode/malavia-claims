@@ -77,7 +77,12 @@ export const claimsApi = {
   }) => unwrap<Claim>(apiClient.post("/claims", body)),
   transition: (
     claimId: string,
-    body: { toStatus: ClaimStatus; remarks?: string; performedBy?: string }
+    body: {
+      toStatus: ClaimStatus;
+      remarks?: string;
+      performedBy?: string;
+      claimNumber?: string;
+    }
   ) =>
     unwrap<Claim>(apiClient.post(`/claims/${claimId}/status-transition`, body)),
   history: (claimId: string) =>

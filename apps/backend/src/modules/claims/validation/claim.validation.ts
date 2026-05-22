@@ -50,6 +50,7 @@ export const transitionClaimStatusSchema = z.object({
     toStatus: z.nativeEnum(ClaimStatus),
     remarks: z.string().trim().optional(),
     performedBy: z.string().trim().optional(),
+    claimNumber: z.string().trim().min(1).optional(),
   }),
   query: z.object({}).optional(),
   params: z.object({

@@ -35,6 +35,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
   const qc = useQueryClient();
   const [target, setTarget] = useState<ClaimStatus | undefined>();
   const [remarks, setRemarks] = useState("");
+  const [alNumber, setAlNumber] = useState("");
 
   const transitions = useMemo(
     () =>
@@ -44,18 +45,33 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
     [claim.status, claim.type, user]
   );
 
+  /* Pre-auth approval gate: require claim/AL number from the insurance company */
+  const needsAlNumber =
+    claim.status === "PREAUTH_PENDING" && target === "PREAUTH_APPROVED";
+  const alNumberValid = !needsAlNumber || alNumber.trim().length >= 2;
+
   const mutation = useMutation({
-    mutationFn: ({ status, reason }: { status: ClaimStatus; reason: string }) =>
+    mutationFn: ({
+      status,
+      reason,
+      claimNumber,
+    }: {
+      status: ClaimStatus;
+      reason: string;
+      claimNumber?: string;
+    }) =>
       claimsApi.transition(claim.id, {
         toStatus: status,
         remarks: reason,
         performedBy: user?._id,
+        ...(claimNumber ? { claimNumber } : {}),
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["claim", claim.id] });
       qc.invalidateQueries({ queryKey: ["timeline", claim.id] });
       setTarget(undefined);
       setRemarks("");
+      setAlNumber("");
     },
   });
 
@@ -162,6 +178,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
         onClose={() => {
           setTarget(undefined);
           setRemarks("");
+          setAlNumber("");
         }}
       >
         <div className="modal-body">
@@ -224,6 +241,47 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                 </div>
               )}
 
+              {/* Insurance Claim / AL Number — mandatory for pre-auth approval */}
+              {needsAlNumber && (
+                <div className="action-panel__audit-section">
+                  <label className="field">
+                    <span>
+                      Insurance Claim / AL Number{" "}
+                      <span className="action-panel__required">*</span>
+                    </span>
+                    <input
+                      className="input"
+                      type="text"
+                      value={alNumber}
+                      onChange={(e) => setAlNumber(e.target.value)}
+                      placeholder="Enter the Claim No. or AL No. given by the insurance company"
+                      disabled={isBlocked}
+                      autoFocus
+                    />
+                  </label>
+                  {alNumber.length > 0 && !alNumberValid && (
+                    <small className="field-error">
+                      Insurance Claim / AL Number is required for pre-auth
+                      approval.
+                    </small>
+                  )}
+                  {!alNumber && (
+                    <small
+                      style={{
+                        display: "block",
+                        marginTop: 4,
+                        fontSize: 11,
+                        color: "var(--amber)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      ⚠ This number is mandatory. The claim number will be
+                      updated to the insurance company's reference number.
+                    </small>
+                  )}
+                </div>
+              )}
+
               {/* Audit reason */}
               <div className="action-panel__audit-section">
                 <label className="field">
@@ -267,16 +325,28 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                   onClick={() => {
                     setTarget(undefined);
                     setRemarks("");
+                    setAlNumber("");
                   }}
                 >
                   Cancel
                 </Button>
                 <Button
                   variant={risk === "critical" ? "danger" : "primary"}
-                  disabled={!remarksValid || isBlocked || mutation.isPending}
+                  disabled={
+                    !remarksValid ||
+                    !alNumberValid ||
+                    isBlocked ||
+                    mutation.isPending
+                  }
                   onClick={() =>
                     target &&
-                    mutation.mutate({ status: target, reason: remarks })
+                    mutation.mutate({
+                      status: target,
+                      reason: remarks,
+                      ...(needsAlNumber
+                        ? { claimNumber: alNumber.trim() }
+                        : {}),
+                    })
                   }
                 >
                   {mutation.isPending

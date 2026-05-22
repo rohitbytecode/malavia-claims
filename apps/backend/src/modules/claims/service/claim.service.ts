@@ -118,7 +118,8 @@ export class ClaimService {
     claimId: string,
     toStatus: ClaimStatus,
     remarks?: string,
-    performedBy?: string
+    performedBy?: string,
+    claimNumber?: string
   ) {
     try {
       const claim = await ClaimRepository.findClaimById(claimId);
@@ -129,11 +130,24 @@ export class ClaimService {
 
       validateClaimStatusTransition(claim.type, claim.status, toStatus);
 
+      // Enforce mandatory claim/AL number for pre-auth approval
+      if (
+        claim.status === ClaimStatus.PREAUTH_PENDING &&
+        toStatus === ClaimStatus.PREAUTH_APPROVED &&
+        !claimNumber?.trim()
+      ) {
+        throw new AppError(
+          "Insurance Claim / AL Number is required when approving pre-authorization",
+          400
+        );
+      }
+
       const updatedClaim = await ClaimRepository.updateClaimStatus(
         claimId,
         toStatus,
         remarks,
-        performedBy
+        performedBy,
+        claimNumber?.trim()
       );
 
       if (!updatedClaim) {
