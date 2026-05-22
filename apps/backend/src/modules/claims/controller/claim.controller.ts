@@ -2,50 +2,62 @@ import { Request, Response, NextFunction } from "express";
 import { ClaimService } from "@/modules/claims/service/claim.service.js";
 
 export class ClaimController {
-  static async createClaim(req: Request, res: Response) {
-    const claim = await ClaimService.createClaim(req.body);
+  static async createClaim(req: Request, res: Response, next: NextFunction) {
+    try {
+      const claim = await ClaimService.createClaim(req.body);
 
-    return res.status(201).json({
-      success: true,
-      message: "Claim created successfully",
-      data: claim,
-    });
+      return res.status(201).json({
+        success: true,
+        message: "Claim created successfully",
+        data: claim,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 
-  static async getClaimById(req: Request, res: Response) {
-    const claimId = Array.isArray(req.params.claimId)
-      ? req.params.claimId[0]
-      : req.params.claimId;
+  static async getClaimById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const claimId = Array.isArray(req.params.claimId)
+        ? req.params.claimId[0]
+        : req.params.claimId;
 
-    const claim = await ClaimService.getClaimById(claimId);
+      const claim = await ClaimService.getClaimById(claimId);
 
-    return res.status(200).json({
-      success: true,
-      message: "Claim fetched successfully",
-      data: claim,
-    });
+      return res.status(200).json({
+        success: true,
+        message: "Claim fetched successfully",
+        data: claim,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 
-  static async listClaims(req: Request, res: Response) {
-    const { type, status, page, limit } = req.query as {
-      type?: string;
-      status?: string;
-      page?: string;
-      limit?: string;
-    };
+  static async listClaims(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { type, status, page, limit } = req.query as {
+        type?: string;
+        status?: string;
+        page?: string;
+        limit?: string;
+      };
 
-    const claims = await ClaimService.listClaims(
-      type as any,
-      status as any,
-      Number(page ?? 1),
-      Number(limit ?? 20)
-    );
+      const claims = await ClaimService.listClaims(
+        type as any,
+        status as any,
+        Number(page ?? 1),
+        Number(limit ?? 20)
+      );
 
-    return res.status(200).json({
-      success: true,
-      message: "Claims listed successfully",
-      data: claims,
-    });
+      return res.status(200).json({
+        success: true,
+        message: "Claims listed successfully",
+        data: claims,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 
   static async transitionClaimStatus(
@@ -83,16 +95,20 @@ export class ClaimController {
     }
   }
 
-  static async getClaimHistory(req: Request, res: Response) {
-    const claimId = Array.isArray(req.params.claimId)
-      ? req.params.claimId[0]
-      : req.params.claimId;
-    const history = await ClaimService.getStatusHistory(claimId);
+  static async getClaimHistory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const claimId = Array.isArray(req.params.claimId)
+        ? req.params.claimId[0]
+        : req.params.claimId;
+      const history = await ClaimService.getStatusHistory(claimId);
 
-    return res.status(200).json({
-      success: true,
-      message: "Claim status history fetched successfully",
-      data: history,
-    });
+      return res.status(200).json({
+        success: true,
+        message: "Claim status history fetched successfully",
+        data: history,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 }

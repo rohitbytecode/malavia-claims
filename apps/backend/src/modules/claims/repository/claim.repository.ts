@@ -19,11 +19,9 @@ export class ClaimRepository {
     }
 
     return ClaimModel.findById(claimId)
-      .populate("patientId")
       .populate("insuranceCompanyId")
       .populate("departmentId")
       .populate("doctorId")
-      .populate("hospitalId")
       .populate("createdBy")
       .populate("updatedBy")
       .lean();
@@ -41,11 +39,9 @@ export class ClaimRepository {
     }
 
     return ClaimModel.find(query)
-      .populate("patientId")
       .populate("insuranceCompanyId")
       .populate("departmentId")
       .populate("doctorId")
-      .populate("hospitalId")
       .sort({ updatedAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
@@ -79,11 +75,9 @@ export class ClaimRepository {
     return ClaimModel.findByIdAndUpdate(claimId, update, {
       new: true,
     })
-      .populate("patientId")
       .populate("insuranceCompanyId")
       .populate("departmentId")
       .populate("doctorId")
-      .populate("hospitalId")
       .populate("createdBy")
       .populate("updatedBy")
       .lean();

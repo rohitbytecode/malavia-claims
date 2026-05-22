@@ -46,8 +46,20 @@ export function AlertsPage() {
     {
       key: "claim",
       header: "Claim",
-      cell: (a) => <Link to={`/claims/${a.claimId}`}>{a.claimId}</Link>,
-      sortValue: (a) => a.claimId,
+      cell: (a) => {
+        const claimObj = typeof a.claimId === "object" && a.claimId !== null
+          ? (a.claimId as any)
+          : null;
+        const claimIdStr = claimObj ? claimObj._id : (a.claimId as string);
+        const claimNum = claimObj ? claimObj.claimNumber : claimIdStr;
+        return <Link to={`/claims/${claimIdStr}`}>{claimNum}</Link>;
+      },
+      sortValue: (a) => {
+        const claimObj = typeof a.claimId === "object" && a.claimId !== null
+          ? (a.claimId as any)
+          : null;
+        return claimObj ? claimObj.claimNumber || "" : (a.claimId as string);
+      },
     },
     {
       key: "created",

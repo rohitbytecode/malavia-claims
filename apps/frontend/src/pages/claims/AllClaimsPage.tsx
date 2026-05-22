@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -22,7 +22,6 @@ import {
 
 export function AllClaimsPage() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
 
   const query = useQuery({
     queryKey: ["all-claims"],
@@ -44,21 +43,7 @@ export function AllClaimsPage() {
     return map;
   }, [patientsQuery.data]);
 
-  const rows = useMemo(
-    () =>
-      (query.data?.data ?? []).filter((claim: Claim) =>
-        [
-          claim.id ?? "",
-          claim.claimNumber ?? "",
-          claim.patientId ?? "",
-          claim.hospitalId ?? "",
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(search.toLowerCase())
-      ),
-    [query.data, search]
-  );
+  const rows = query.data?.data ?? [];
 
   const columns: Column<Claim>[] = [
     {

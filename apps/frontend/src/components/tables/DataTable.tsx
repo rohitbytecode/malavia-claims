@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState, useRef, useCallback, Fragment } from "react";
 import { EmptyState } from "../ui/EmptyState";
 import { cn } from "../../lib/cn";
 
@@ -225,7 +225,7 @@ export function DataTable<T>({
                   const id = getRowId(row);
                   const isExpanded = expandedRows.has(id);
                   return (
-                    <>
+                    <Fragment key={id}>
                       <tr
                         key={id}
                         className={cn(
@@ -278,7 +278,7 @@ export function DataTable<T>({
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
           </tbody>

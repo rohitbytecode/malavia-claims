@@ -30,6 +30,10 @@ export function ReportsPage() {
     }
   );
 
+  const visibleColumnCount = useMemo(() => {
+    return Object.values(visibleColumns).filter(Boolean).length;
+  }, [visibleColumns]);
+
   const monthly = useQuery({
     queryKey: ["reports", "monthly", year, month],
     queryFn: () => reportApi.monthly(year, month),
@@ -497,8 +501,11 @@ export function ReportsPage() {
               ))}
             </div>
 
-            <div style={{ overflowX: "auto", marginBottom: 32 }}>
-              <table className="report-table">
+            <div className="report-table-wrapper" style={{ overflowX: "auto", marginBottom: 32 }}>
+              <table
+                className="report-table"
+                style={{ "--visible-cols": visibleColumnCount } as React.CSSProperties}
+              >
                 <thead>
                   <tr>
                     {visibleColumns.claimNo && <th>Claim No.</th>}

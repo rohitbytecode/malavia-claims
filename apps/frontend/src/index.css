@@ -2902,14 +2902,27 @@ select.input {
   .report-summary-cell strong {
     color: #1a3a8f !important;
   }
+  .report-table-wrapper {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    width: 100% !important;
+  }
+  .report-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    font-size: clamp(9px, calc(15.5px - var(--visible-cols) * 0.75px), 13px) !important;
+  }
   .report-table th {
     background: #eef2ff !important;
     color: #1a3a8f !important;
     border-bottom: 1px solid #c7d2fe !important;
+    padding: clamp(4px, calc(10px - var(--visible-cols) * 0.6px), 10px) !important;
   }
   .report-table td {
     border-bottom: 1px solid #e2e8f0 !important;
     color: #334155 !important;
+    padding: clamp(4px, calc(10px - var(--visible-cols) * 0.6px), 10px) !important;
   }
   .report-table tbody tr:hover td {
     background: transparent !important;
