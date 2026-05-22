@@ -10,6 +10,7 @@
     "start": "node dist/server.js",
     "seed": "tsx -r tsconfig-paths/register src/seed/seed.ts",
     "seed:alerts": "tsx -r tsconfig-paths/register src/seed/seed-test-alerts.ts",
+    "seed:admin": "tsx -r tsconfig-paths/register src/seed/seed-admin.ts",
     "test": "vitest run",
     "lint": "eslint ."
   },

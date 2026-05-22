@@ -40,6 +40,7 @@ export const apiLimiter = rateLimit({
   max: env.RATE_LIMIT_MAX, // Limit each IP to configured max requests per `window` (here, per 15 minutes)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  skip: () => env.NODE_ENV === "development", // Bypass rate limiting in dev mode
   message: {
     success: false,
     message:

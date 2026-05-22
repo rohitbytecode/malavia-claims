@@ -1,4 +1,5 @@
 import { InsuranceCompanyDocument } from "@/modules/insurance-companies/types/insurance-company.types.js";
+import { decryptPortalPassword } from "@/modules/insurance-companies/utils/encryption.util.js";
 
 export const toInsuranceCompanyResponse = (
   company: Partial<InsuranceCompanyDocument>
@@ -9,6 +10,9 @@ export const toInsuranceCompanyResponse = (
     submissionMethods: company.submissionMethods,
     portalUrl: company.portalUrl,
     portalUsername: company.portalUsername,
+    portalPassword: company.portalPasswordEncrypted
+      ? decryptPortalPassword(company.portalPasswordEncrypted)
+      : undefined,
     email: company.email,
     courierAddress: company.courierAddress,
     tatDays: company.tatDays,
@@ -20,3 +24,4 @@ export const toInsuranceCompanyResponse = (
     updatedAt: company.updatedAt,
   };
 };
+
