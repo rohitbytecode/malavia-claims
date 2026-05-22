@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "../store/auth.store";
 import { useUiStore } from "../store/ui.store";
 import {
@@ -8,6 +9,7 @@ import {
   accountantRoles,
   operationalRoles,
 } from "../constants/workflow";
+import { alertApi } from "../api/services";
 import type { Role } from "../types/domain";
 
 type NavIconName =
@@ -124,112 +126,117 @@ const NAV_ITEMS: {
   roles: Role[];
   group: string;
 }[] = [
-  {
-    to: "/dashboard",
-    label: "Command Center",
-    icon: "dashboard",
-    roles: operationalRoles,
-    group: "operations",
-  },
-  {
-    to: "/claims",
-    label: "Claims",
-    icon: "claims",
-    roles: operationalRoles,
-    group: "operations",
-  },
-  {
-    to: "/patients",
-    label: "Patients",
-    icon: "users",
-    roles: operationalRoles,
-    group: "operations",
-  },
-  {
-    to: "/doctors",
-    label: "Doctors",
-    icon: "users",
-    roles: operationalRoles,
-    group: "operations",
-  },
-  {
-    to: "/alerts",
-    label: "Alerts",
-    icon: "alerts",
-    roles: operationalRoles,
-    group: "operations",
-  },
-  {
-    to: "/settlements",
-    label: "Settlements",
-    icon: "settlements",
-    roles: accountantRoles,
-    group: "finance",
-  },
-  {
-    to: "/reports",
-    label: "Reports",
-    icon: "reports",
-    roles: operationalRoles,
-    group: "finance",
-  },
-  {
-    to: "/insurance",
-    label: "Insurance",
-    icon: "insurance",
-    roles: adminRoles,
-    group: "administration",
-  },
-  {
-    to: "/departments",
-    label: "Departments",
-    icon: "departments",
-    roles: adminRoles,
-    group: "administration",
-  },
-  {
-    to: "/users",
-    label: "Users",
-    icon: "users",
-    roles: adminRoles,
-    group: "administration",
-  },
-  {
-    to: "/settings",
-    label: "Settings",
-    icon: "settings",
-    roles: operationalRoles,
-    group: "system",
-  },
-];
+    {
+      to: "/dashboard",
+      label: "Command Center",
+      icon: "dashboard",
+      roles: operationalRoles,
+      group: "operations",
+    },
+    {
+      to: "/claims",
+      label: "Claims",
+      icon: "claims",
+      roles: operationalRoles,
+      group: "operations",
+    },
+    {
+      to: "/patients",
+      label: "Patients",
+      icon: "users",
+      roles: operationalRoles,
+      group: "operations",
+    },
+    {
+      to: "/doctors",
+      label: "Doctors",
+      icon: "users",
+      roles: operationalRoles,
+      group: "operations",
+    },
+    {
+      to: "/alerts",
+      label: "Alerts",
+      icon: "alerts",
+      roles: operationalRoles,
+      group: "operations",
+    },
+    {
+      to: "/settlements",
+      label: "Settlements",
+      icon: "settlements",
+      roles: accountantRoles,
+      group: "finance",
+    },
+    {
+      to: "/reports",
+      label: "Reports",
+      icon: "reports",
+      roles: operationalRoles,
+      group: "finance",
+    },
+    {
+      to: "/insurance",
+      label: "Insurance",
+      icon: "insurance",
+      roles: adminRoles,
+      group: "administration",
+    },
+    {
+      to: "/departments",
+      label: "Departments",
+      icon: "departments",
+      roles: adminRoles,
+      group: "administration",
+    },
+    {
+      to: "/users",
+      label: "Users",
+      icon: "users",
+      roles: adminRoles,
+      group: "administration",
+    },
+    {
+      to: "/settings",
+      label: "Settings",
+      icon: "settings",
+      roles: operationalRoles,
+      group: "system",
+    },
+  ];
 
 const ROLE_META: Record<Role, { label: string; color: string; abbr: string }> =
-  {
-    SUPER_ADMIN: { label: "Super Admin", color: "var(--amber)", abbr: "SA" },
-    ADMIN: {
-      label: "Administrator",
-      color: "var(--accent-primary)",
-      abbr: "AD",
-    },
-    CLAIM_MANAGER: {
-      label: "Claim Manager",
-      color: "var(--green)",
-      abbr: "CM",
-    },
-    CLAIM_EXECUTIVE: {
-      label: "Claim Executive",
-      color: "var(--steel)",
-      abbr: "CE",
-    },
-    ACCOUNTANT: { label: "Accountant", color: "var(--amber)", abbr: "AC" },
-  };
+{
+  SUPER_ADMIN: { label: "Super Admin", color: "var(--amber)", abbr: "SA" },
+  ADMIN: {
+    label: "Administrator",
+    color: "var(--accent-primary)",
+    abbr: "AD",
+  },
+  CLAIM_MANAGER: {
+    label: "Claim Manager",
+    color: "var(--green)",
+    abbr: "CM",
+  },
+  CLAIM_EXECUTIVE: {
+    label: "Claim Executive",
+    color: "var(--steel)",
+    abbr: "CE",
+  },
+  ACCOUNTANT: { label: "Accountant", color: "var(--amber)", abbr: "AC" },
+};
 
 export function AppLayout({ children }: PropsWithChildren) {
   const { user, logout, hasRole } = useAuthStore();
   const { theme, toggleTheme, sidebarCollapsed, toggleSidebar } = useUiStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const [alertCount] = useState(3); // would normally come from query
+  const activeAlerts = useQuery({
+    queryKey: ["alerts", "active", "sidebar"],
+    queryFn: () => alertApi.active({ limit: 100 }),
+    refetchInterval: 60_000,
+  });
+  const alertCount = activeAlerts.data?.data?.filter((a) => !a.resolved).length ?? 0;
 
   const filteredNav = NAV_ITEMS.filter((item) => hasRole(item.roles));
   const groups = ["operations", "finance", "administration", "system"];

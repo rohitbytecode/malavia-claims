@@ -26,24 +26,32 @@ export function AlertPlaybookPanel({
         </strong>
       </div>
       <div className="playbook-list">
-        {sorted.slice(0, 6).map((alert) => {
-          const play = alertPlaybook[alert.type];
-          const owner = role ? play.ownerRoles.includes(role) : false;
-          return (
-            <article
-              className={`playbook-item ${owner ? "owned" : ""}`}
-              key={alert._id}
-            >
-              <div className="playbook-head">
-                <StatusBadge value={alert.severity} compact />
-                <span>{formatDateTime(alert.createdAt)}</span>
-              </div>
-              <strong>{play.label}</strong>
-              <p>{alert.message}</p>
-              <em>{play.response}</em>
-            </article>
-          );
-        })}
+        {sorted.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-state-icon">✓</span>
+            <strong>All clear</strong>
+            <p>No active alerts. The system is operating normally.</p>
+          </div>
+        ) : (
+          sorted.slice(0, 6).map((alert) => {
+            const play = alertPlaybook[alert.type];
+            const owner = role ? play.ownerRoles.includes(role) : false;
+            return (
+              <article
+                className={`playbook-item ${owner ? "owned" : ""}`}
+                key={alert._id}
+              >
+                <div className="playbook-head">
+                  <StatusBadge value={alert.severity} compact />
+                  <span>{formatDateTime(alert.createdAt)}</span>
+                </div>
+                <strong>{play.label}</strong>
+                <p>{alert.message}</p>
+                <em>{play.response}</em>
+              </article>
+            );
+          })
+        )}
       </div>
     </section>
   );

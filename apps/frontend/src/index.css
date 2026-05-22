@@ -3587,6 +3587,39 @@ select.input {
   font-family: var(--font-mono);
   font-size: 10px;
 }
+
+/* Empty state — reusable for any panel with no data */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 48px 20px;
+  text-align: center;
+}
+.empty-state-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green-bg);
+  color: var(--green);
+  font-size: 20px;
+  font-weight: 700;
+  border: 1px solid var(--green-border);
+  margin-bottom: 4px;
+}
+.empty-state strong {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.empty-state p {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  max-width: 260px;
+}
 .status-orbit-grid {
   padding: 0 20px 20px;
   display: grid;
