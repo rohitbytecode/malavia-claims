@@ -46,7 +46,12 @@ export class DashboardService {
     });
 
     // 5. Total Settled Amount
+    const currentYear = new Date().getFullYear();
+    const startOfYear = new Date(currentYear, 0, 1, 0, 0, 0, 0);
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
     const totalSettledResult = await SettlementModel.aggregate([
+      { $match: { settlementDate: { $gte: startOfYear, $lte: endOfYear } } },
       { $group: { _id: null, total: { $sum: "$approvedAmount" } } },
     ]);
     const totalSettledAmount =
@@ -90,6 +95,7 @@ export class DashboardService {
       activeAlertsCount,
       financials: {
         totalSettledAmount,
+        year: currentYear,
       },
       claimsByStatus: claimsByStatus.map((s) => ({
         status: s._id,

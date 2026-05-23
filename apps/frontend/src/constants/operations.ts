@@ -147,7 +147,7 @@ export const roleExperiences: Record<Role, RoleExperience> = {
     ],
     guardrails: [
       "Reopening requires explicit audit reason",
-      "Backend workflow map still validates every transition",
+      "System workflow map still validates every transition",
     ],
   },
   ADMIN: {

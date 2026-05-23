@@ -32,7 +32,7 @@ export function LoginPage() {
         className="login-card"
         onSubmit={handleSubmit((values) => mutation.mutate(values))}
       >
-        <p className="eyebrow">Secure JWT Login</p>
+        <p className="eyebrow">Secure Login</p>
         <h2>Operator sign in</h2>
         <Field label="Email" error={errors.email?.message}>
           <TextInput type="email" autoComplete="email" {...register("email")} />

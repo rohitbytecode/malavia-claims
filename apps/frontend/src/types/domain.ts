@@ -318,7 +318,7 @@ export interface DashboardMetrics {
   delayedClaims: { over45Days: number; over60Days: number };
   pendingDepositRefunds: number;
   activeAlertsCount: number;
-  financials: { totalSettledAmount: number };
+  financials: { totalSettledAmount: number; year: number };
   claimsByStatus: { status: ClaimStatus; count: number }[];
   ageingSummary: {
     under30Days: number;

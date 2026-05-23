@@ -82,9 +82,11 @@ export class ReportService {
     ]);
   }
 
-  static async generateMonthlyReport(year: number, month: number) {
+  static async generateMonthlyReport(year: number, month: number, endYear?: number, endMonth?: number) {
     const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    const endDate = endYear && endMonth
+      ? new Date(endYear, endMonth, 0, 23, 59, 59, 999)
+      : new Date(year, month, 0, 23, 59, 59, 999);
 
     const summary = await ClaimModel.aggregate([
       { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
@@ -166,9 +168,11 @@ export class ReportService {
     };
   }
 
-  static async generateSettlementReport(year: number, month: number) {
+  static async generateSettlementReport(year: number, month: number, endYear?: number, endMonth?: number) {
     const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    const endDate = endYear && endMonth
+      ? new Date(endYear, endMonth, 0, 23, 59, 59, 999)
+      : new Date(year, month, 0, 23, 59, 59, 999);
 
     const settlements = await mongoose.model("Settlement").aggregate([
       { $match: { settlementDate: { $gte: startDate, $lte: endDate } } },

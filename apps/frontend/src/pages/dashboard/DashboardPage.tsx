@@ -75,7 +75,7 @@ export function DashboardPage() {
             <strong>{urgentAgeing}</strong>
           </div>
           <div>
-            <span>Settled value</span>
+            <span>Settled value ({data.financials.year})</span>
             <strong>
               {formatCurrency(data.financials.totalSettledAmount)}
             </strong>

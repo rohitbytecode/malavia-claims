@@ -12,8 +12,19 @@ import { formatCurrency, labelize } from "../../utils/format";
 
 export function ReportsPage() {
   const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [reportMode, setReportMode] = useState<"monthly" | "calendar" | "financial" | "custom">("monthly");
+  const [monthlyYear, setMonthlyYear] = useState(now.getFullYear());
+  const [monthlyMonth, setMonthlyMonth] = useState(now.getMonth() + 1);
+  const [calendarYear, setCalendarYear] = useState(now.getFullYear());
+
+  const defaultFinancialYear = now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
+  const [financialYear, setFinancialYear] = useState(defaultFinancialYear);
+
+  const [startYear, setStartYear] = useState(now.getFullYear());
+  const [startMonth, setStartMonth] = useState(now.getMonth() + 1);
+  const [endYear, setEndYear] = useState(now.getFullYear());
+  const [endMonth, setEndMonth] = useState(now.getMonth() + 1);
+
   const [patientId, setPatientId] = useState("");
   const [patientInput, setPatientInput] = useState("");
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
@@ -30,13 +41,76 @@ export function ReportsPage() {
     }
   );
 
+  const { queryYear, queryMonth, queryEndYear, queryEndMonth } = useMemo(() => {
+    switch (reportMode) {
+      case "monthly":
+        return {
+          queryYear: monthlyYear,
+          queryMonth: monthlyMonth,
+          queryEndYear: undefined,
+          queryEndMonth: undefined,
+        };
+      case "calendar":
+        return {
+          queryYear: calendarYear,
+          queryMonth: 1,
+          queryEndYear: calendarYear,
+          queryEndMonth: 12,
+        };
+      case "financial":
+        return {
+          queryYear: financialYear,
+          queryMonth: 4,
+          queryEndYear: financialYear + 1,
+          queryEndMonth: 3,
+        };
+      case "custom":
+        return {
+          queryYear: startYear,
+          queryMonth: startMonth,
+          queryEndYear: endYear,
+          queryEndMonth: endMonth,
+        };
+    }
+  }, [reportMode, monthlyYear, monthlyMonth, calendarYear, financialYear, startYear, startMonth, endYear, endMonth]);
+
+  const periodLabel = useMemo(() => {
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    switch (reportMode) {
+      case "monthly":
+        return `${monthNames[monthlyMonth - 1]} ${monthlyYear}`;
+      case "calendar":
+        return `Calendar Year ${calendarYear} (January - December)`;
+      case "financial":
+        return `Financial Year ${financialYear}-${(financialYear + 1).toString().slice(-2)} (April ${financialYear} - March ${financialYear + 1})`;
+      case "custom":
+        return `${monthNames[startMonth - 1]} ${startYear} to ${monthNames[endMonth - 1]} ${endYear}`;
+    }
+  }, [reportMode, monthlyMonth, monthlyYear, calendarYear, financialYear, startMonth, startYear, endMonth, endYear]);
+
+  const periodShortLabel = useMemo(() => {
+    switch (reportMode) {
+      case "monthly":
+        return `${monthlyMonth.toString().padStart(2, "0")}/${monthlyYear}`;
+      case "calendar":
+        return `CY ${calendarYear}`;
+      case "financial":
+        return `FY ${financialYear}-${(financialYear + 1).toString().slice(-2)}`;
+      case "custom":
+        return `${startMonth.toString().padStart(2, "0")}/${startYear} - ${endMonth.toString().padStart(2, "0")}/${endYear}`;
+    }
+  }, [reportMode, monthlyMonth, monthlyYear, calendarYear, financialYear, startMonth, startYear, endMonth, endYear]);
+
   const visibleColumnCount = useMemo(() => {
     return Object.values(visibleColumns).filter(Boolean).length;
   }, [visibleColumns]);
 
   const monthly = useQuery({
-    queryKey: ["reports", "monthly", year, month],
-    queryFn: () => reportApi.monthly(year, month),
+    queryKey: ["reports", "monthly", reportMode, queryYear, queryMonth, queryEndYear, queryEndMonth],
+    queryFn: () => reportApi.monthly(queryYear, queryMonth, queryEndYear, queryEndMonth),
   });
 
   const insurance = useQuery({
@@ -45,8 +119,8 @@ export function ReportsPage() {
   });
 
   const settlementReport = useQuery({
-    queryKey: ["reports", "settlement", year, month],
-    queryFn: () => reportApi.settlementReport(year, month),
+    queryKey: ["reports", "settlement", reportMode, queryYear, queryMonth, queryEndYear, queryEndMonth],
+    queryFn: () => reportApi.settlementReport(queryYear, queryMonth, queryEndYear, queryEndMonth),
   });
 
   const patient = useQuery({
@@ -189,9 +263,17 @@ export function ReportsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
+    const fileSuffix = reportMode === "monthly"
+      ? `${monthlyYear}_${monthlyMonth.toString().padStart(2, "0")}`
+      : reportMode === "calendar"
+      ? `CY_${calendarYear}`
+      : reportMode === "financial"
+      ? `FY_${financialYear}_${(financialYear + 1).toString().slice(-2)}`
+      : `Custom_${queryYear}_${queryMonth.toString().padStart(2, "0")}_to_${queryEndYear}_${queryEndMonth?.toString().padStart(2, "0")}`;
+
     link.setAttribute(
       "download",
-      `detailed_claims_${year}_${month.toString().padStart(2, "0")}.csv`
+      `detailed_claims_${fileSuffix}.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -222,41 +304,202 @@ export function ReportsPage() {
               color: "var(--text-tertiary)",
             }}
           >
-            Year
+            Report Period Type
           </span>
-          <input
+          <select
             className="input"
-            type="number"
-            style={{ width: 90 }}
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-          />
+            value={reportMode}
+            onChange={(e) => setReportMode(e.target.value as any)}
+            style={{ width: 140 }}
+          >
+            <option value="monthly">Monthly</option>
+            <option value="calendar">Calendar Year</option>
+            <option value="financial">Financial Year</option>
+            <option value="custom">Custom Months</option>
+          </select>
         </label>
 
-        <label
-          className="field"
-          style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-        >
-          <span
-            style={{
-              whiteSpace: "nowrap",
-              fontSize: 12,
-              fontWeight: 700,
-              color: "var(--text-tertiary)",
-            }}
+        {reportMode === "monthly" && (
+          <>
+            <label
+              className="field"
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
+              <span
+                style={{
+                  whiteSpace: "nowrap",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "var(--text-tertiary)",
+                }}
+              >
+                Year
+              </span>
+              <input
+                className="input"
+                type="number"
+                style={{ width: 90 }}
+                value={monthlyYear}
+                onChange={(e) => setMonthlyYear(Number(e.target.value))}
+              />
+            </label>
+
+            <label
+              className="field"
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
+              <span
+                style={{
+                  whiteSpace: "nowrap",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "var(--text-tertiary)",
+                }}
+              >
+                Month
+              </span>
+              <input
+                className="input"
+                type="number"
+                min={1}
+                max={12}
+                style={{ width: 70 }}
+                value={monthlyMonth}
+                onChange={(e) => setMonthlyMonth(Number(e.target.value))}
+              />
+            </label>
+          </>
+        )}
+
+        {reportMode === "calendar" && (
+          <label
+            className="field"
+            style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
           >
-            Month
-          </span>
-          <input
-            className="input"
-            type="number"
-            min={1}
-            max={12}
-            style={{ width: 70 }}
-            value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
-          />
-        </label>
+            <span
+              style={{
+                whiteSpace: "nowrap",
+                fontSize: 12,
+                fontWeight: 700,
+                color: "var(--text-tertiary)",
+              }}
+            >
+              Calendar Year
+            </span>
+            <input
+              className="input"
+              type="number"
+              style={{ width: 90 }}
+              value={calendarYear}
+              onChange={(e) => setCalendarYear(Number(e.target.value))}
+            />
+          </label>
+        )}
+
+        {reportMode === "financial" && (
+          <label
+            className="field"
+            style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+          >
+            <span
+              style={{
+                whiteSpace: "nowrap",
+                fontSize: 12,
+                fontWeight: 700,
+                color: "var(--text-tertiary)",
+              }}
+            >
+              Financial Year
+            </span>
+            <select
+              className="input"
+              value={financialYear}
+              onChange={(e) => setFinancialYear(Number(e.target.value))}
+              style={{ width: 120 }}
+            >
+              {[0, 1, 2, 3, 4].map((offset) => {
+                const yearVal = now.getFullYear() - offset;
+                return (
+                  <option key={yearVal} value={yearVal}>
+                    {yearVal}-{((yearVal + 1) % 100).toString().padStart(2, "0")}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+        )}
+
+        {reportMode === "custom" && (
+          <>
+            <label
+              className="field"
+              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
+              <span
+                style={{
+                  whiteSpace: "nowrap",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "var(--text-tertiary)",
+                }}
+              >
+                From
+              </span>
+              <input
+                className="input"
+                type="number"
+                min={1}
+                max={12}
+                style={{ width: 50 }}
+                value={startMonth}
+                onChange={(e) => setStartMonth(Number(e.target.value))}
+                placeholder="MM"
+              />
+              <input
+                className="input"
+                type="number"
+                style={{ width: 75 }}
+                value={startYear}
+                onChange={(e) => setStartYear(Number(e.target.value))}
+                placeholder="YYYY"
+              />
+            </label>
+
+            <label
+              className="field"
+              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
+              <span
+                style={{
+                  whiteSpace: "nowrap",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "var(--text-tertiary)",
+                }}
+              >
+                To
+              </span>
+              <input
+                className="input"
+                type="number"
+                min={1}
+                max={12}
+                style={{ width: 50 }}
+                value={endMonth}
+                onChange={(e) => setEndMonth(Number(e.target.value))}
+                placeholder="MM"
+              />
+              <input
+                className="input"
+                type="number"
+                style={{ width: 75 }}
+                value={endYear}
+                onChange={(e) => setEndYear(Number(e.target.value))}
+                placeholder="YYYY"
+              />
+            </label>
+          </>
+        )}
 
         <div style={{ display: "flex", gap: 8, flex: 1, minWidth: 240 }}>
           <input
@@ -317,11 +560,7 @@ export function ReportsPage() {
             </p>
             <h2>Insurance Claims Financial Review</h2>
             <p style={{ marginTop: 4 }}>
-              Period{" "}
-              {new Date(year, month - 1).toLocaleString("en-IN", {
-                month: "long",
-                year: "numeric",
-              })}
+              Period {periodLabel}
             </p>
           </div>
           <div className="report-meta">
@@ -352,7 +591,7 @@ export function ReportsPage() {
           <div className="report-summary-cell">
             <span>Report Period</span>
             <strong style={{ fontSize: 14 }}>
-              {month.toString().padStart(2, "0")}/{year}
+              {periodShortLabel}
             </strong>
           </div>
           <div className="report-summary-cell">
@@ -374,7 +613,7 @@ export function ReportsPage() {
                 marginBottom: 12,
               }}
             >
-              Claims by Status — {month}/{year}
+              Claims by Status — {periodLabel}
             </h3>
             <div className="report-summary" style={{ marginBottom: 28 }}>
               {summary.map((row: any) => (
@@ -402,7 +641,7 @@ export function ReportsPage() {
               fontSize: 13,
             }}
           >
-            No claims found for {month}/{year}
+            No claims found for {periodLabel}
           </div>
         )}
 
@@ -419,7 +658,7 @@ export function ReportsPage() {
                 margin: "32px 0 12px",
               }}
             >
-              Detailed Claims — {month.toString().padStart(2, "0")}/{year}
+              Detailed Claims — {periodLabel}
             </h3>
 
             <div
@@ -665,8 +904,7 @@ export function ReportsPage() {
             margin: "32px 0 12px",
           }}
         >
-          Settlement Financial Review — {month.toString().padStart(2, "0")}/
-          {year}
+          Settlement Financial Review — {periodLabel}
         </h3>
 
         {settlementReport.isLoading && <Skeleton rows={3} />}
@@ -689,7 +927,7 @@ export function ReportsPage() {
                   fontSize: 13,
                 }}
               >
-                No settlements found for {month}/{year}
+                No settlements found for {periodLabel}
               </div>
             );
           }

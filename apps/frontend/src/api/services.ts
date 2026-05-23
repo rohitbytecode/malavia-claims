@@ -198,17 +198,17 @@ export const auditApi = {
     ).then(normalized),
 };
 export const reportApi = {
-  monthly: (year: number, month: number) =>
+  monthly: (year: number, month: number, endYear?: number, endMonth?: number) =>
     unwrap<ReportRow[]>(
-      apiClient.get("/reports/monthly", { params: { year, month } })
+      apiClient.get("/reports/monthly", { params: { year, month, endYear, endMonth } })
     ),
   insurancePerformance: () =>
     unwrap<ReportRow[]>(apiClient.get("/reports/insurance-performance")),
   patientClaims: (patientId: string) =>
     unwrap<ReportRow[]>(apiClient.get(`/reports/patient-claims/${patientId}`)),
-  settlementReport: (year: number, month: number) =>
+  settlementReport: (year: number, month: number, endYear?: number, endMonth?: number) =>
     unwrap<any>(
-      apiClient.get("/reports/settlement-report", { params: { year, month } })
+      apiClient.get("/reports/settlement-report", { params: { year, month, endYear, endMonth } })
     ),
 };
 export const departmentApi = {

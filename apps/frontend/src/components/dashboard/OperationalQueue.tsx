@@ -61,10 +61,10 @@ export function OperationalQueue({
       <div className="panel-title-row">
         <div>
           <p className="eyebrow">Operational queue</p>
-          <h2>Backend-driven action lanes</h2>
+          <h2>Action lanes</h2>
         </div>
         <div className="finance-orb">
-          <span>Settled value</span>
+          <span>Settled value ({metrics.financials.year})</span>
           <strong>
             {formatCurrency(metrics.financials.totalSettledAmount)}
           </strong>

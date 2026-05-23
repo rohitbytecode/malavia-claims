@@ -26,7 +26,7 @@ export class ReportController {
   }
 
   static async getMonthlyReport(req: Request, res: Response) {
-    const { year, month } = req.query;
+    const { year, month, endYear, endMonth } = req.query;
 
     if (!year || !month) {
       return res.status(400).json({
@@ -37,7 +37,9 @@ export class ReportController {
 
     const report = await ReportService.generateMonthlyReport(
       Number(year),
-      Number(month)
+      Number(month),
+      endYear ? Number(endYear) : undefined,
+      endMonth ? Number(endMonth) : undefined
     );
 
     return res.status(200).json({
@@ -48,7 +50,7 @@ export class ReportController {
   }
 
   static async getSettlementReport(req: Request, res: Response) {
-    const { year, month } = req.query;
+    const { year, month, endYear, endMonth } = req.query;
 
     if (!year || !month) {
       return res.status(400).json({
@@ -59,7 +61,9 @@ export class ReportController {
 
     const report = await ReportService.generateSettlementReport(
       Number(year),
-      Number(month)
+      Number(month),
+      endYear ? Number(endYear) : undefined,
+      endMonth ? Number(endMonth) : undefined
     );
 
     return res.status(200).json({
