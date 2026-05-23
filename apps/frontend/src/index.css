@@ -4637,3 +4637,31 @@ select.input {
 .dt-toolbar__left {
   min-width: 0;
 }
+
+@media print {
+  .sidebar, .topbar, .filter-bar, .no-print, button, .btn {
+    display: none !important;
+  }
+  .workspace {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  .app-shell {
+    grid-template-columns: 1fr !important;
+  }
+  body, html {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  .dataTable__container {
+    overflow: visible !important;
+  }
+}
+

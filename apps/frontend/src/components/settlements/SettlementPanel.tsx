@@ -19,6 +19,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
   const [tds, setTds] = useState(0);
   const [hospitalDiscount, setHospitalDiscount] = useState(0);
   const [method, setMethod] = useState<SettlementMethod>("PORTAL");
+  const [refundAmount, setRefundAmount] = useState(claim.depositAmount || 0);
   const create = useMutation({
     mutationFn: () =>
       settlementApi.create({
@@ -30,9 +31,14 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         settlementMethod: method,
         settledBy: user?._id ?? "",
         remarks: "Recorded from frontend settlement panel",
+        refundAmount,
       }),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["settlement", claim.id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["settlement", claim.id] });
+      qc.invalidateQueries({ queryKey: ["claim", claim.id] });
+      qc.invalidateQueries({ queryKey: ["timeline", claim.id] });
+      qc.invalidateQueries({ queryKey: ["deposit", claim.id] });
+    },
   });
   const data = settlement.data;
   const allocations = useQuery({
@@ -160,6 +166,19 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
             <option>EMAIL</option>
             <option>COURIER</option>
           </select>
+        </label>
+        <label className="field">
+          <span>Refund amount to return to patient (₹)</span>
+          <input
+            className="input"
+            type="number"
+            value={refundAmount}
+            onChange={(e) => setRefundAmount(Number(e.target.value))}
+            min={0}
+          />
+          <small style={{ color: "var(--text-secondary)", fontSize: 11, marginTop: 4, display: "block" }}>
+            Patient deposit collected: {formatCurrency(claim.depositAmount || 0)}
+          </small>
         </label>
         <div className="readonly-total">
           <span>Backend-controlled net payable preview</span>

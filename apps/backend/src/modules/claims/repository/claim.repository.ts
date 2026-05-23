@@ -58,13 +58,17 @@ export class ClaimRepository {
     remarks?: string,
     updatedBy?: string,
     claimNumber?: string,
-    totalClaimAmount?: number
+    totalClaimAmount?: number,
+    depositAmount?: number,
+    refundAmount?: number
   ) {
     const $set: {
       status: ClaimStatus;
       updatedBy?: Types.ObjectId;
       claimNumber?: string;
       totalClaimAmount?: number;
+      depositAmount?: number;
+      refundAmount?: number;
     } = {
       status,
     };
@@ -79,6 +83,14 @@ export class ClaimRepository {
 
     if (totalClaimAmount !== undefined) {
       $set.totalClaimAmount = totalClaimAmount;
+    }
+
+    if (depositAmount !== undefined) {
+      $set.depositAmount = depositAmount;
+    }
+
+    if (refundAmount !== undefined) {
+      $set.refundAmount = refundAmount;
     }
 
     const update: Record<string, unknown> = { $set };

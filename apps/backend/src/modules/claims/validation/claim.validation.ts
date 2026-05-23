@@ -52,6 +52,8 @@ export const transitionClaimStatusSchema = z.object({
     performedBy: z.string().trim().optional(),
     claimNumber: z.string().trim().min(1).optional(),
     totalClaimAmount: z.number().nonnegative().optional(),
+    depositAmount: z.number().nonnegative().optional(),
+    refundAmount: z.number().nonnegative().optional(),
   }),
   query: z.object({}).optional(),
   params: z.object({

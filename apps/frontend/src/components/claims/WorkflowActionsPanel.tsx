@@ -37,6 +37,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
   const [remarks, setRemarks] = useState("");
   const [alNumber, setAlNumber] = useState("");
   const [updatedClaimAmount, setUpdatedClaimAmount] = useState<number>(claim.totalClaimAmount);
+  const [updatedDepositAmount, setUpdatedDepositAmount] = useState<number>(claim.depositAmount || 0);
 
   const isReconsiderationExpired = useMemo(() => {
     if (claim.status !== "PREAUTH_REJECTED" && claim.status !== "FINAL_REJECTED") {
@@ -99,11 +100,13 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
       reason,
       claimNumber,
       totalClaimAmount,
+      depositAmount,
     }: {
       status: ClaimStatus;
       reason: string;
       claimNumber?: string;
       totalClaimAmount?: number;
+      depositAmount?: number;
     }) =>
       claimsApi.transition(claim.id, {
         toStatus: status,
@@ -111,15 +114,18 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
         performedBy: user?._id,
         ...(claimNumber ? { claimNumber } : {}),
         ...(totalClaimAmount !== undefined ? { totalClaimAmount } : {}),
+        ...(depositAmount !== undefined ? { depositAmount } : {}),
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["claim", claim.id] });
       qc.invalidateQueries({ queryKey: ["timeline", claim.id] });
       qc.invalidateQueries({ queryKey: ["history", claim.id] });
+      qc.invalidateQueries({ queryKey: ["deposit", claim.id] });
       setTarget(undefined);
       setRemarks("");
       setAlNumber("");
       setUpdatedClaimAmount(claim.totalClaimAmount);
+      setUpdatedDepositAmount(claim.depositAmount || 0);
     },
   });
 
@@ -173,24 +179,35 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
             {transitions.map((status) => {
               const r = TRANSITION_RISK[status] ?? "low";
               const isExpiredReconsideration = status === "RECONSIDERATION_PENDING" && isReconsiderationExpired;
+              const isSettledTransitionDisabled = claim.status === "SETTLEMENT_PENDING" && status === "SETTLED";
+              const isDisabled = isExpiredReconsideration || isSettledTransitionDisabled;
+              const tooltipTitle = isExpiredReconsideration 
+                ? "Reconsideration period of 7 days has expired" 
+                : isSettledTransitionDisabled 
+                ? "Please finalize the settlement in the Finance Execution Console instead." 
+                : "";
+
               return (
                 <button
                   key={status}
                   className={`action-panel__transition-btn action-panel__transition-btn--${r}`}
                   onClick={() => setTarget(status)}
-                  disabled={isExpiredReconsideration}
+                  disabled={isDisabled}
                   style={
                     {
-                      "--risk-color": isExpiredReconsideration ? "var(--text-tertiary)" : RISK_COLORS[r],
-                      opacity: isExpiredReconsideration ? 0.6 : 1,
-                      cursor: isExpiredReconsideration ? "not-allowed" : "pointer"
+                      "--risk-color": isDisabled ? "var(--text-tertiary)" : RISK_COLORS[r],
+                      opacity: isDisabled ? 0.6 : 1,
+                      cursor: isDisabled ? "not-allowed" : "pointer"
                     } as React.CSSProperties
                   }
-                  title={isExpiredReconsideration ? "Reconsideration period of 7 days has expired" : ""}
+                  title={tooltipTitle}
                   type="button"
                 >
                   <span className="action-panel__transition-arrow">→</span>
-                  <span>{labelize(status)}{isExpiredReconsideration ? " (Expired)" : ""}</span>
+                  <span>
+                    {labelize(status)}
+                    {isExpiredReconsideration ? " (Expired)" : isSettledTransitionDisabled ? " (Use Finance Console)" : ""}
+                  </span>
                   {r === "critical" && (
                     <span className="action-panel__risk-badge">CRITICAL</span>
                   )}
@@ -390,6 +407,60 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                   )}
                 </div>
               )}
+              {target === "FINAL_APPROVED" && (
+                <div className="action-panel__audit-section">
+                  <div className="action-panel__risk-warning action-panel__risk-warning--low" style={{ borderColor: "var(--accent-primary)", color: "var(--accent-primary)", marginBottom: 12, display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                    <span>?</span>
+                    <div>
+                      <strong>Verify Deposit Collected</strong>
+                      <p style={{ marginTop: 4, fontSize: 12 }}>
+                        Is the collected deposit amount correct? Or did you collect more deposit? If yes, please enter the updated amount.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="field">
+                    <span>
+                      Collected Deposit Amount (₹)
+                    </span>
+                    <input
+                      className="input input-mono"
+                      type="number"
+                      value={updatedDepositAmount}
+                      onChange={(e) => setUpdatedDepositAmount(Number(e.target.value))}
+                      min={0}
+                      step="0.01"
+                      disabled={isBlocked}
+                    />
+                  </label>
+                  {updatedDepositAmount !== claim.depositAmount && (
+                    <small
+                      style={{
+                        display: "block",
+                        marginTop: 4,
+                        fontSize: 11,
+                        color: "var(--amber)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      ⚠ Deposit will be updated from {formatCurrency(claim.depositAmount || 0)} → {formatCurrency(updatedDepositAmount)}
+                    </small>
+                  )}
+                </div>
+              )}
+
+              {target === "DEPOSIT_RETURNED" && (
+                <div className="action-panel__audit-section">
+                  <div className="action-panel__risk-warning action-panel__risk-warning--high" style={{ borderColor: "var(--amber)", color: "var(--amber)", display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: 12 }}>
+                    <span>?</span>
+                    <div>
+                      <strong>Refund Confirmation</strong>
+                      <p style={{ marginTop: 4, fontSize: 12 }}>
+                        Did you return the refund amount of <strong>{formatCurrency(claim.refundAmount)}</strong> to the patient?
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Audit reason */}
               <div className="action-panel__audit-section">
@@ -436,6 +507,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                     setRemarks("");
                     setAlNumber("");
                     setUpdatedClaimAmount(claim.totalClaimAmount);
+                    setUpdatedDepositAmount(claim.depositAmount || 0);
                   }}
                 >
                   Cancel
@@ -459,6 +531,9 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                         : {}),
                       ...(canEditAmount && (updatedClaimAmount !== claim.totalClaimAmount || claim.status === "DRAFT")
                         ? { totalClaimAmount: updatedClaimAmount }
+                        : {}),
+                      ...(target === "FINAL_APPROVED"
+                        ? { depositAmount: updatedDepositAmount }
                         : {}),
                     })
                   }

@@ -11,6 +11,7 @@ export const createSettlementSchema = z.object({
     settlementMethod: z.nativeEnum(SettlementMethod),
     remarks: z.string().trim().optional(),
     settledBy: z.string().trim().min(1),
+    refundAmount: z.number().nonnegative().optional(),
   }),
   query: z.object({}).optional(),
   params: z.object({}).optional(),

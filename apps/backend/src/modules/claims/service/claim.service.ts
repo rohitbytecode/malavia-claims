@@ -9,6 +9,8 @@ import {
 } from "@/modules/claims/mapper/claim.mapper.js";
 import { ClaimStatus } from "@/modules/claims/constant/claim-status.enum.js";
 import { ClaimType } from "@/modules/claims/constant/claim-type.enum.js";
+import { DepositRepository } from "@/modules/deposits/repository/deposit.repository.js";
+import { RefundStatus } from "@/modules/deposits/constant/refund-status.enum.js";
 
 interface CreateClaimPayload {
   type: ClaimType;
@@ -120,7 +122,9 @@ export class ClaimService {
     remarks?: string,
     performedBy?: string,
     claimNumber?: string,
-    totalClaimAmount?: number
+    totalClaimAmount?: number,
+    depositAmount?: number,
+    refundAmount?: number
   ) {
     try {
       const claim = await ClaimRepository.findClaimById(claimId);
@@ -246,11 +250,41 @@ export class ClaimService {
         remarks,
         performedBy,
         claimNumber?.trim(),
-        amountChangeAllowed ? totalClaimAmount : undefined
+        amountChangeAllowed ? totalClaimAmount : undefined,
+        depositAmount,
+        refundAmount
       );
 
       if (!updatedClaim) {
         throw new AppError("Unable to update claim status", 500);
+      }
+
+      // Sync Deposit record when FINAL_APPROVED
+      if (toStatus === ClaimStatus.FINAL_APPROVED && depositAmount !== undefined) {
+        const existingDeposit = await DepositRepository.findDepositByClaimId(claimId);
+        if (existingDeposit) {
+          await DepositRepository.updateDeposit(existingDeposit._id.toString(), {
+            collectedAmount: depositAmount,
+          } as any);
+        } else {
+          await DepositRepository.createDeposit({
+            claimId: new Types.ObjectId(claimId),
+            collectedAmount: depositAmount,
+            refundAmount: 0,
+            refundStatus: RefundStatus.PENDING,
+          } as any);
+        }
+      }
+
+      // Sync Deposit record when DEPOSIT_RETURNED
+      if (toStatus === ClaimStatus.DEPOSIT_RETURNED) {
+        const deposit = await DepositRepository.findDepositByClaimId(claimId);
+        if (deposit) {
+          await DepositRepository.updateDeposit(deposit._id.toString(), {
+            refundStatus: RefundStatus.COMPLETED,
+            refundDate: new Date(),
+          } as any);
+        }
       }
 
       await ClaimStatusHistoryRepository.createClaimStatusHistory({

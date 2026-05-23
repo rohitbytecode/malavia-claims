@@ -85,6 +85,8 @@ export const claimsApi = {
       performedBy?: string;
       claimNumber?: string;
       totalClaimAmount?: number;
+      depositAmount?: number;
+      refundAmount?: number;
     }
   ) =>
     unwrap<Claim>(apiClient.post(`/claims/${claimId}/status-transition`, body)),
@@ -106,6 +108,7 @@ export const settlementApi = {
     settlementMethod: SettlementMethod;
     remarks?: string;
     settledBy: string;
+    refundAmount?: number;
   }) => unwrap<Settlement>(apiClient.post("/settlements", body)),
 };
 export const allocationApi = {
