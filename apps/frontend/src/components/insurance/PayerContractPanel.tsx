@@ -393,13 +393,9 @@ export function PayerContractPanel({
                   value={draft.defaultHospitalDiscountPercent}
                   onChange={(e) => {
                     const newVal = Number(e.target.value);
-                    const oldVal = draft.defaultHospitalDiscountPercent;
                     setDraft((d) => {
                       const updatedPolicies = d.departmentPolicies.map((p) => {
-                        if (p.discountPercent === 0 || p.discountPercent === oldVal) {
-                          return { ...p, discountPercent: newVal };
-                        }
-                        return p;
+                        return { ...p, discountPercent: newVal };
                       });
                       return {
                         ...d,
