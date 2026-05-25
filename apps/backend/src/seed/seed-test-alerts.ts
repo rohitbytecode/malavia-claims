@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { connectDatabase } from "../config/db.js";
 import { logger } from "../config/logger.js";
 import { ClaimModel } from "../modules/claims/schema/claim.schema.js";
+import { ClaimStatusHistoryModel } from "../modules/claims/schema/claim-status-history.schema.js";
 import { ClaimStatus } from "../modules/claims/constant/claim-status.enum.js";
 import { ClaimType } from "../modules/claims/constant/claim-type.enum.js";
 import { DepositModel } from "../modules/deposits/schema/deposit.schema.js";
@@ -66,7 +67,7 @@ const seedTestAlertsData = async () => {
     const claim50 = await ClaimModel.create({
       claimNumber: "TEST-CLM-50DAYS",
       type: ClaimType.CASHLESS,
-      status: ClaimStatus.PREAUTH_PENDING,
+      status: ClaimStatus.SETTLEMENT_PENDING,
       patientId: patient.patientId,
       insuranceCompanyId: hdfc._id,
       hospitalId: new mongoose.Types.ObjectId(),
@@ -79,6 +80,16 @@ const seedTestAlertsData = async () => {
     await mongoose.connection
       .db!.collection("claims")
       .updateOne({ _id: claim50._id }, { $set: { createdAt: date50DaysAgo } });
+    
+    // Create transition history entry backdated to 50 days ago
+    await ClaimStatusHistoryModel.create({
+      claimId: claim50._id,
+      fromStatus: ClaimStatus.FINAL_APPROVED,
+      toStatus: ClaimStatus.SETTLEMENT_PENDING,
+      effectiveAt: date50DaysAgo,
+      createdAt: date50DaysAgo,
+    });
+
     logger.info(
       "Created 50-day-old claim (TEST-CLM-50DAYS) to trigger High Courier Delay."
     );
@@ -87,7 +98,7 @@ const seedTestAlertsData = async () => {
     const claim65 = await ClaimModel.create({
       claimNumber: "TEST-CLM-65DAYS",
       type: ClaimType.CASHLESS,
-      status: ClaimStatus.FINAL_APPROVAL_PENDING,
+      status: ClaimStatus.SETTLEMENT_PENDING,
       patientId: patient.patientId,
       insuranceCompanyId: hdfc._id,
       hospitalId: new mongoose.Types.ObjectId(),
@@ -100,6 +111,16 @@ const seedTestAlertsData = async () => {
     await mongoose.connection
       .db!.collection("claims")
       .updateOne({ _id: claim65._id }, { $set: { createdAt: date65DaysAgo } });
+
+    // Create transition history entry backdated to 65 days ago
+    await ClaimStatusHistoryModel.create({
+      claimId: claim65._id,
+      fromStatus: ClaimStatus.FINAL_APPROVED,
+      toStatus: ClaimStatus.SETTLEMENT_PENDING,
+      effectiveAt: date65DaysAgo,
+      createdAt: date65DaysAgo,
+    });
+
     logger.info(
       "Created 65-day-old claim (TEST-CLM-65DAYS) to trigger Critical Courier Delay."
     );

@@ -286,7 +286,7 @@ export function FinancialControlDeck({
       )}
 
       <p className="validation-note">
-        All calculations follow backend rules. Refunds cannot exceed collected
+        All calculations follow system rules. Refunds cannot exceed collected
         deposits.
       </p>
     </section>

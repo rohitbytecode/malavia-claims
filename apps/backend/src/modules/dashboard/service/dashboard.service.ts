@@ -4,6 +4,7 @@ import { AlertModel } from "@/modules/alerts/schema/alert.schema.js";
 import { SettlementModel } from "@/modules/settlements/schema/settlement.schema.js";
 import { DepositModel } from "@/modules/deposits/schema/deposit.schema.js";
 import { RefundStatus } from "@/modules/deposits/constant/refund-status.enum.js";
+import { ClaimStatusHistoryModel } from "@/modules/claims/schema/claim-status-history.schema.js";
 
 export class DashboardService {
   static async getDashboardMetrics() {
@@ -22,18 +23,34 @@ export class DashboardService {
 
     // 2. Delayed Courier Claims
     const now = new Date();
-    const days45Ago = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000);
-    const days60Ago = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+    let delayedCourier45Days = 0;
+    let delayedCourier60Days = 0;
 
-    const delayedCourier45Days = await ClaimModel.countDocuments({
-      createdAt: { $lte: days45Ago, $gt: days60Ago },
-      status: { $ne: ClaimStatus.SETTLED },
-    });
+    const settlementPendingClaims = await ClaimModel.find({
+      status: ClaimStatus.SETTLEMENT_PENDING,
+    }).lean();
 
-    const delayedCourier60Days = await ClaimModel.countDocuments({
-      createdAt: { $lte: days60Ago },
-      status: { $ne: ClaimStatus.SETTLED },
-    });
+    for (const claim of settlementPendingClaims) {
+      const history = await ClaimStatusHistoryModel.findOne({
+        claimId: claim._id,
+        toStatus: ClaimStatus.SETTLEMENT_PENDING,
+      })
+        .sort({ effectiveAt: -1 })
+        .lean();
+
+      const transitionDate = history
+        ? new Date(history.effectiveAt || history.createdAt)
+        : new Date(claim.createdAt);
+
+      const diffMs = now.getTime() - transitionDate.getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+      if (diffDays >= 60) {
+        delayedCourier60Days++;
+      } else if (diffDays >= 45) {
+        delayedCourier45Days++;
+      }
+    }
 
     // 3. Pending Deposit Refunds
     const pendingDepositRefunds = await DepositModel.countDocuments({
@@ -64,6 +81,7 @@ export class DashboardService {
 
     // 7. Claims Ageing Summary
     const days30Ago = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const days60Ago = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
     const days90Ago = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
     const ageingSummary = {
