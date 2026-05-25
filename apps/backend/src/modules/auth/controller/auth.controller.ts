@@ -50,4 +50,12 @@ export class AuthController {
       message: "Password changed successfully",
     });
   }
+
+  static async getPublicUsers(req: Request, res: Response) {
+    const users = await AuthService.getPublicUsers();
+    return res.status(200).json({
+      success: true,
+      data: users,
+    });
+  }
 }

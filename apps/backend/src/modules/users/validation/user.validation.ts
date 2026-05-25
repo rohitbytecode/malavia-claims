@@ -3,7 +3,7 @@ import { Roles } from "@/core/enums/roles.enum.js";
 
 const createUserBody = z.object({
   fullName: z.string().min(2),
-  email: z.string().email(),
+  username: z.string().min(3),
   password: z.string().min(8).optional(),
   role: z.nativeEnum(Roles),
   isActive: z.boolean().optional().default(true),
@@ -11,7 +11,7 @@ const createUserBody = z.object({
 
 const updateUserBody = z.object({
   fullName: z.string().min(2).optional(),
-  email: z.string().email().optional(),
+  username: z.string().min(3).optional(),
   password: z.string().min(8).optional(),
   role: z.nativeEnum(Roles).optional(),
   isActive: z.boolean().optional(),

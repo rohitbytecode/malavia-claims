@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { UserService } from "@/modules/users/service/user.service.js";
+import { AppError } from "@/core/errors/AppError.js";
 
 export class UserController {
   static async createUser(req: Request, res: Response) {
@@ -53,6 +54,21 @@ export class UserController {
       ? req.params.userId[0]
       : req.params.userId;
 
+    // Prevent changing own role
+    if (
+      req.user &&
+      req.user.id === userId &&
+      req.body.role &&
+      req.body.role !== req.user.role
+    ) {
+      throw new AppError("Changing your own role is not permitted", 400);
+    }
+
+    // Prevent deactivating self via update
+    if (req.user && req.user.id === userId && req.body.isActive === false) {
+      throw new AppError("Deactivating yourself is not permitted", 400);
+    }
+
     const user = await UserService.updateUser(userId, req.body);
 
     return res.status(200).json({
@@ -66,6 +82,11 @@ export class UserController {
     const userId = Array.isArray(req.params.userId)
       ? req.params.userId[0]
       : req.params.userId;
+
+    // Prevent deactivating self
+    if (req.user && req.user.id === userId) {
+      throw new AppError("Deactivating yourself is not permitted", 400);
+    }
 
     const user = await UserService.deactivateUser(userId);
 

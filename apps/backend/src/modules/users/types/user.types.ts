@@ -3,7 +3,7 @@ import { Roles } from "@/core/enums/roles.enum.js";
 
 export interface UserBase {
   fullName: string;
-  email: string;
+  username: string;
   password: string;
   role: Roles;
   isActive: boolean;

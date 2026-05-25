@@ -4,7 +4,7 @@ export const toUserResponse = (user: Partial<UserDocument>) => {
   return {
     id: user._id?.toString() ?? null,
     fullName: user.fullName,
-    email: user.email,
+    username: (user as any).username,
     role: user.role,
     isActive: user.isActive,
     createdAt: user.createdAt,

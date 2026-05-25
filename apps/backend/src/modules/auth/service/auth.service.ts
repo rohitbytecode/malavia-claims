@@ -13,7 +13,7 @@ import { UserDocument } from "@/modules/users/types/user.types.js";
 import { Roles } from "@/core/enums/roles.enum.js";
 
 interface LoginPayload {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -29,10 +29,10 @@ const buildTokenPayload = (userId: string, role: Roles) => ({
 
 export class AuthService {
   static async login(payload: LoginPayload) {
-    const user = await AuthRepository.findUserByEmail(payload.email);
+    const user = await AuthRepository.findUserByUsername(payload.username);
 
     if (!user || !user.password) {
-      throw new AppError("Invalid email or password", 401);
+      throw new AppError("Invalid username or password", 401);
     }
 
     if (!user.isActive) {
@@ -48,7 +48,7 @@ export class AuthService {
     );
 
     if (!passwordMatches) {
-      throw new AppError("Invalid email or password", 401);
+      throw new AppError("Invalid username or password", 401);
     }
 
     const accessToken = signAccessToken(
@@ -141,5 +141,9 @@ export class AuthService {
     await UserRepository.updateRefreshTokenHash(userId, undefined);
 
     return { success: true };
+  }
+
+  static async getPublicUsers() {
+    return UserRepository.listActiveUsers();
   }
 }

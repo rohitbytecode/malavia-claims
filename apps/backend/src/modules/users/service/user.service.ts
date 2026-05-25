@@ -7,7 +7,7 @@ import { UserDocument } from "@/modules/users/types/user.types.js";
 
 interface CreateUserPayload {
   fullName: string;
-  email: string;
+  username: string;
   password: string;
   role: Roles;
   isActive?: boolean;
@@ -15,7 +15,7 @@ interface CreateUserPayload {
 
 interface UpdateUserPayload {
   fullName?: string;
-  email?: string;
+  username?: string;
   password?: string;
   role?: Roles;
   isActive?: boolean;
@@ -35,10 +35,10 @@ export class UserService {
   static async createUser(
     payload: Omit<CreateUserPayload, "password"> & { password?: string }
   ) {
-    const existingUser = await UserRepository.findByEmail(payload.email);
+    const existingUser = await UserRepository.findByUsername(payload.username);
 
     if (existingUser) {
-      throw new AppError("Email already in use", 409);
+      throw new AppError("Username already in use", 409);
     }
 
     if (payload.role === Roles.SUPER_ADMIN) {
@@ -49,11 +49,11 @@ export class UserService {
     const hashedPassword = await hashPassword(autoPassword);
     const user = await UserRepository.createUser({
       fullName: payload.fullName,
-      email: payload.email.toLowerCase().trim(),
+      username: payload.username.toLowerCase().trim(),
       password: hashedPassword,
       role: payload.role,
       isActive: payload.isActive ?? true,
-    } as Partial<UserDocument>);
+    } as any);
 
     return {
       ...toUserResponse(user),
@@ -93,8 +93,8 @@ export class UserService {
       updatePayload.fullName = payload.fullName;
     }
 
-    if (payload.email) {
-      updatePayload.email = payload.email.toLowerCase().trim();
+    if (payload.username) {
+      updatePayload.username = payload.username.toLowerCase().trim();
     }
 
     if (payload.password) {

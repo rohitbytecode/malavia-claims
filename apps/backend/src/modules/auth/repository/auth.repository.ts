@@ -2,8 +2,8 @@ import { UserRepository } from "@/modules/users/repository/user.repository.js";
 import { UserDocument } from "@/modules/users/types/user.types.js";
 
 export class AuthRepository {
-  static async findUserByEmail(email: string) {
-    return UserRepository.findByEmail(email);
+  static async findUserByUsername(username: string) {
+    return UserRepository.findByUsername(username);
   }
 
   static async findUserById(userId: string) {

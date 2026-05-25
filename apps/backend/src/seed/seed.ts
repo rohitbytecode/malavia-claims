@@ -24,13 +24,26 @@ const runSeeders = async () => {
     await connectDatabase();
     logger.info("Database connected. Starting seed...");
 
+    try {
+      await UserModel.collection.dropIndex("email_1");
+      logger.info("Dropped old email unique index successfully.");
+    } catch (e: any) {
+      if (e.codeName !== "IndexNotFound") {
+        logger.warn("Could not drop email_1 index or it does not exist.");
+      }
+    }
+
+    // Clear existing users to start clean with username schema
+    await UserModel.deleteMany({});
+    logger.info("Cleared existing users.");
+
     // 1. Seed Admin User
-    const adminExists = await UserModel.findOne({ email: "admin@hicms.local" });
+    const adminExists = await UserModel.findOne({ username: "admin" });
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash("Admin@123!", 10);
       await UserModel.create({
         fullName: "System Admin",
-        email: "admin@hicms.local",
+        username: "admin",
         password: hashedPassword,
         role: Roles.ADMIN,
         isActive: true,
@@ -41,13 +54,13 @@ const runSeeders = async () => {
     }
 
     const superAdminExists = await UserModel.findOne({
-      email: "superadmin@hicms.local",
+      username: "superadmin",
     });
     if (!superAdminExists) {
       const hashedPassword = await bcrypt.hash("SuperAdmin@123!", 10);
       await UserModel.create({
         fullName: "Super Admin",
-        email: "superadmin@hicms.local",
+        username: "superadmin",
         password: hashedPassword,
         role: Roles.SUPER_ADMIN,
         isActive: true,

@@ -11,14 +11,14 @@ describe("Auth Endpoints", () => {
     const hashedPassword = await bcrypt.hash(password, 10);
     await UserModel.create({
       fullName: "Test User",
-      email: "test@local.com",
+      username: "testuser",
       password: hashedPassword,
       role: Roles.CLAIM_MANAGER,
       isActive: true,
     });
 
     const response = await request(app).post("/api/v1/auth/login").send({
-      email: "test@local.com",
+      username: "testuser",
       password,
     });
 
@@ -29,7 +29,7 @@ describe("Auth Endpoints", () => {
 
   it("should fail authentication with invalid password", async () => {
     const response = await request(app).post("/api/v1/auth/login").send({
-      email: "test@local.com",
+      username: "testuser",
       password: "WrongPassword",
     });
 

@@ -30,8 +30,15 @@ export class UserRepository {
     return UserModel.findById(userId);
   }
 
-  static async findByEmail(email: string) {
-    return UserModel.findOne({ email: email.toLowerCase().trim() });
+  static async findByUsername(username: string) {
+    return UserModel.findOne({ username: username.toLowerCase().trim() });
+  }
+
+  static async listActiveUsers() {
+    return UserModel.find({ isActive: true })
+      .select("username fullName role")
+      .sort({ fullName: 1 })
+      .lean();
   }
 
   static async listUsers(filters: UserFilters, page: number, limit: number) {
