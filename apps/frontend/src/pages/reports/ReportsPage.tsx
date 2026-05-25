@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   reportApi,
@@ -49,6 +49,14 @@ function buildPrintStyle(activeTab: TabId): string {
   ).join("\n");
 }
 
+function ReportGeneratedTime() {
+  const [time, setTime] = useState("");
+  useEffect(() => {
+    setTime(new Date().toLocaleString("en-IN"));
+  }, []);
+  return <div>{time ? `Generated ${time}` : ""}</div>;
+}
+
 export function ReportsPage() {
   const now = new Date();
 
@@ -57,18 +65,18 @@ export function ReportsPage() {
   const [reportMode, setReportMode] = useState<
     "monthly" | "calendar" | "financial" | "custom"
   >("monthly");
-  const [monthlyYear, setMonthlyYear] = useState(now.getFullYear());
-  const [monthlyMonth, setMonthlyMonth] = useState(now.getMonth() + 1);
-  const [calendarYear, setCalendarYear] = useState(now.getFullYear());
+  const [monthlyYear, setMonthlyYear] = useState(() => new Date().getFullYear());
+  const [monthlyMonth, setMonthlyMonth] = useState(() => new Date().getMonth() + 1);
+  const [calendarYear, setCalendarYear] = useState(() => new Date().getFullYear());
 
   const defaultFinancialYear =
     now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
   const [financialYear, setFinancialYear] = useState(defaultFinancialYear);
 
-  const [startYear, setStartYear] = useState(now.getFullYear());
-  const [startMonth, setStartMonth] = useState(now.getMonth() + 1);
-  const [endYear, setEndYear] = useState(now.getFullYear());
-  const [endMonth, setEndMonth] = useState(now.getMonth() + 1);
+  const [startYear, setStartYear] = useState(() => new Date().getFullYear());
+  const [startMonth, setStartMonth] = useState(() => new Date().getMonth() + 1);
+  const [endYear, setEndYear] = useState(() => new Date().getFullYear());
+  const [endMonth, setEndMonth] = useState(() => new Date().getMonth() + 1);
 
   const [patientId, setPatientId] = useState("");
   const [patientInput, setPatientInput] = useState("");
@@ -376,7 +384,7 @@ export function ReportsPage() {
       {/* ── Tab navigation ── */}
       <div className="report-tabs no-print" role="tablist" aria-label="Report sections">
         {REPORT_TABS.map((tab) => (
-          <button
+          <button type="button"
             key={tab.id}
             role="tab"
             aria-selected={activeTab === tab.id}
@@ -384,7 +392,7 @@ export function ReportsPage() {
             id={`tab-${tab.id}`}
             className={`report-tab-btn${activeTab === tab.id ? " report-tab-btn--active" : ""}`}
             onClick={() => setActiveTab(tab.id)}
-            type="button"
+            
           >
             {tab.label}
           </button>
@@ -411,7 +419,7 @@ export function ReportsPage() {
           </div>
           <div className="report-meta">
             <div>Page 1</div>
-            <div>Generated {new Date().toLocaleString("en-IN")}</div>
+            <ReportGeneratedTime />
           </div>
         </div>
 
@@ -464,12 +472,12 @@ export function ReportsPage() {
                   fontSize: 13,
                   fontWeight: 800,
                   textTransform: "uppercase",
-                  letterSpacing: "0.08em",
+                  letterSpacing: "0.05em",
                   color: "var(--accent-primary)",
                   marginBottom: 12,
                 }}
               >
-                Patient Claim Summary — {patientId}
+                Patient Claim Summary - {patientId}
               </h3>
               <div className="report-summary">
                 {patient.data.map((row: any) => (

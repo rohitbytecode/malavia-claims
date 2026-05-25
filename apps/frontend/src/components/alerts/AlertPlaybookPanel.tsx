@@ -10,7 +10,7 @@ export function AlertPlaybookPanel({
   alerts: Alert[];
   role?: Role;
 }) {
-  const sorted = [...alerts].sort(
+  const sorted = alerts.toSorted(
     (a, b) => severityRank[b.severity] - severityRank[a.severity]
   );
 

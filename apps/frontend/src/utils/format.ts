@@ -1,22 +1,26 @@
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
 export const formatCurrency = (value?: number) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value ?? 0);
+  currencyFormatter.format(value ?? 0);
+
+const dateTimeFormatter = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
 export const formatDateTime = (value?: string) =>
-  value
-    ? new Intl.DateTimeFormat("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(value))
-    : "—";
+  value ? dateTimeFormatter.format(new Date(value)) : "—";
+
+const dateFormatter = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "medium",
+});
+
 export const formatDate = (value?: string) =>
-  value
-    ? new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(
-        new Date(value)
-      )
-    : "—";
+  value ? dateFormatter.format(new Date(value)) : "—";
 export const labelize = (value?: string) =>
   value
     ? value

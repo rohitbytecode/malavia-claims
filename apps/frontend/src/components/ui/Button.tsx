@@ -11,7 +11,7 @@ export function Button({
   ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }
 >) {
   return (
-    <button
+    <button type="button"
       className={cn(
         "btn",
         `btn-${variant}`,

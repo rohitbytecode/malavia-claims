@@ -14,13 +14,13 @@ const read = <T>(key: string): T | undefined => {
   return raw ? (JSON.parse(raw) as T) : undefined;
 };
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: read<User>("mh_user"),
-  accessToken: localStorage.getItem("mh_access") ?? undefined,
-  refreshToken: localStorage.getItem("mh_refresh") ?? undefined,
+  user: read<User>("mh_user:v1"),
+  accessToken: localStorage.getItem("mh_access:v1") ?? undefined,
+  refreshToken: localStorage.getItem("mh_refresh:v1") ?? undefined,
   setSession: (user, tokens) => {
-    localStorage.setItem("mh_user", JSON.stringify(user));
-    localStorage.setItem("mh_access", tokens.accessToken);
-    localStorage.setItem("mh_refresh", tokens.refreshToken);
+    localStorage.setItem("mh_user:v1", JSON.stringify(user));
+    localStorage.setItem("mh_access:v1", tokens.accessToken);
+    localStorage.setItem("mh_refresh:v1", tokens.refreshToken);
     set({
       user,
       accessToken: tokens.accessToken,
@@ -28,14 +28,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
   updateTokens: (tokens) => {
-    localStorage.setItem("mh_access", tokens.accessToken);
-    localStorage.setItem("mh_refresh", tokens.refreshToken);
+    localStorage.setItem("mh_access:v1", tokens.accessToken);
+    localStorage.setItem("mh_refresh:v1", tokens.refreshToken);
     set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
   },
   logout: () => {
-    localStorage.removeItem("mh_user");
-    localStorage.removeItem("mh_access");
-    localStorage.removeItem("mh_refresh");
+    localStorage.removeItem("mh_user:v1");
+    localStorage.removeItem("mh_access:v1");
+    localStorage.removeItem("mh_refresh:v1");
     set({ user: undefined, accessToken: undefined, refreshToken: undefined });
   },
   hasRole: (roles) => {

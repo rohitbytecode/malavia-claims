@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   settlementApi,
   allocationApi,
@@ -55,22 +55,21 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
   const [method, setMethod] = useState<SettlementMethod>("PORTAL");
   const [hospitalDiscount, setHospitalDiscount] = useState(0);
   const [tds, setTds] = useState(0);
-  const [isTdsUserEdited, setIsTdsUserEdited] = useState(false);
+  const isTdsUserEdited = useRef(false);
   const [refundAmount, setRefundAmount] = useState(claim.depositAmount || 0);
 
   // Build initial department lines when data is available
   useEffect(() => {
     if (billBreakdown.length > 0) {
       const policyMap = new Map(
-        (contract?.departmentPolicies ?? [])
-          .filter((p) => p.isApplicable !== false)
-          .map((p) => [p.departmentCategory, p])
+        (contract?.departmentPolicies ?? []).flatMap((p) =>
+          p.isApplicable !== false ? [[p.departmentCategory, p]] : []
+        )
       );
 
-      const lines: SettlementDepartmentBreakdown[] = billBreakdown
-        .filter((b) => b.amount > 0)
-        .map((b) => {
-          const policy = policyMap.get(b.departmentCategory);
+      const lines: SettlementDepartmentBreakdown[] = billBreakdown.flatMap((b) => {
+        if (b.amount <= 0) return [];
+        const policy = policyMap.get(b.departmentCategory);
           const claimed = b.amount;
           const approved = claimed;
 
@@ -134,7 +133,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         setTds(initialTds);
       }
     }
-  }, [billBreakdown.length, contract, claim.totalClaimAmount]);
+  }, [billBreakdown, contract, claim.totalClaimAmount]);
 
   const updateLine = (
     idx: number,
@@ -224,10 +223,10 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
 
   // Auto-set TDS from computed
   useEffect(() => {
-    if (contract && !isTdsUserEdited && totals.tdsAmount > 0) {
+    if (contract && !isTdsUserEdited.current && totals.tdsAmount > 0) {
       setTds(totals.tdsAmount);
     }
-  }, [totals.tdsAmount, isTdsUserEdited, contract]);
+  }, [totals.tdsAmount, contract]);
 
   const create = useMutation({
     mutationFn: () =>
@@ -589,6 +588,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                         max={100}
                         step="0.5"
                         value={line.discountPercent}
+                        readOnly
                         disabled
                         style={{
                           width: 60,
@@ -691,7 +691,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
             value={tds}
             onChange={(e) => {
               setTds(Number(e.target.value));
-              setIsTdsUserEdited(true);
+              isTdsUserEdited.current = true;
             }}
             min={0}
           />

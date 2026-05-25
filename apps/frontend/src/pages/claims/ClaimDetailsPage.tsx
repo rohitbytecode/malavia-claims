@@ -464,7 +464,7 @@ export function ClaimDetailsPage() {
                     placeholder="Record operational communication"
                     disabled={locked}
                   />
-                  <button
+                  <button type="button"
                     className="btn btn-secondary"
                     disabled={locked || addCommunication.isPending}
                   >

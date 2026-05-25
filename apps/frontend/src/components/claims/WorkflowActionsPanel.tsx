@@ -63,7 +63,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
 
   const lastRejectionStatus = useMemo(() => {
     if (!historyQuery.data) return null;
-    const sorted = [...historyQuery.data].sort(
+    const sorted = historyQuery.data.toSorted(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
@@ -92,7 +92,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
     return allowed.filter((s) =>
       user ? canRoleTransition(user.role, s) : false
     );
-  }, [claim.status, claim.type, claim.claimNumber, user, lastRejectionStatus]);
+  }, [claim.status, claim.type, claim.claimNumber, claim.id, user, lastRejectionStatus]);
 
   /* Pre-auth approval gate: require claim/AL number from the insurance company */
   const needsAlNumber =
@@ -209,7 +209,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                   : "";
 
               return (
-                <button
+                <button type="button"
                   key={status}
                   className={`action-panel__transition-btn action-panel__transition-btn--${r}`}
                   onClick={() => setTarget(status)}
@@ -224,7 +224,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                     } as React.CSSProperties
                   }
                   title={tooltipTitle}
-                  type="button"
+                  
                 >
                   <span className="action-panel__transition-arrow">→</span>
                   <span>
@@ -356,7 +356,6 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                       onChange={(e) => setAlNumber(e.target.value)}
                       placeholder="Enter the Claim No. or AL No. given by the insurance company"
                       disabled={isBlocked}
-                      autoFocus
                     />
                   </label>
                   {alNumber.length > 0 && !alNumberValid && (

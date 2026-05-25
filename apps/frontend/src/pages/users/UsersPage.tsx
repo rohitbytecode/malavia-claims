@@ -239,13 +239,15 @@ export function UsersPage() {
                   setDraft((d) => ({ ...d, role: e.target.value as Role }))
                 }
               >
-                {operationalRoles
-                  .filter((r) => !editing || r === editing.role || r !== "SUPER_ADMIN")
-                  .map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
+                {operationalRoles.flatMap((role) =>
+                  !editing || role === editing.role || role !== "SUPER_ADMIN"
+                    ? [
+                        <option key={role} value={role}>
+                          {role}
+                        </option>,
+                      ]
+                    : []
+                )}
               </SelectInput>
             </Field>
             <label className="field">

@@ -226,6 +226,7 @@ export function SettingsPage() {
               or duplication of this platform is strictly prohibited.
             </p>
             <span
+              suppressHydrationWarning
               style={{
                 fontSize: "0.75em",
                 color: "var(--text-muted, #666)",
