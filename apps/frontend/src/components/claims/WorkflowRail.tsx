@@ -138,7 +138,7 @@ export function WorkflowRail({ claim }: WorkflowRailProps) {
       {/* Next transitions */}
       <div className="workflow-rail__next">
         <span className="workflow-rail__next-label">
-          Backend-allowed transitions
+          System-allowed transitions
         </span>
         <div className="workflow-rail__next-chips">
           {nextStatuses.length > 0 ? (

@@ -204,7 +204,7 @@ export function ClaimDetailsPage() {
             )}
             {criticalAgeing && !locked && (
               <div className="audit-warning">
-                Ageing risk: this claim is inside backend courier-delay
+                Ageing risk: this claim is inside system's courier-delay
                 escalation territory.
               </div>
             )}
@@ -484,7 +484,7 @@ export function ClaimDetailsPage() {
               <Card className="premium-panel audit-console">
                 <CardHeader
                   title="Audit trace"
-                  eyebrow="Backend immutable activity"
+                  eyebrow="System immutable activity"
                 />
                 {auditExceptions.map((log) => (
                   <div className="audit-row" key={log._id}>

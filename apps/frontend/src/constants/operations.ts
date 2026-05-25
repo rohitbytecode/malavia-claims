@@ -176,7 +176,7 @@ export const roleExperiences: Record<Role, RoleExperience> = {
       "Maintain masters",
     ],
     guardrails: [
-      "Cannot bypass invalid backend transitions",
+      "Cannot bypass invalid system transitions",
       "Closed claims remain locked",
     ],
   },
@@ -246,7 +246,7 @@ export const roleExperiences: Record<Role, RoleExperience> = {
       "Export financial reports",
     ],
     guardrails: [
-      "Net payable is backend-calculated",
+      "Net payable is system-calculated",
       "Refund cannot exceed deposit",
       "Department allocations cannot exceed settlement",
     ],

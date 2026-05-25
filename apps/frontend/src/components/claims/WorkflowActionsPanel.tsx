@@ -264,7 +264,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
           <ul>
             <li>Invalid transitions are hidden — not blocked</li>
             <li>Every action requires a minimum 8-character audit reason</li>
-            <li>Backend workflow validator is the final authority</li>
+            <li>System workflow validator is the final authority</li>
             <li>All actions are logged to the immutable audit trail</li>
           </ul>
         </div>

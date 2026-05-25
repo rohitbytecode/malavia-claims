@@ -440,7 +440,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
           ))}
           <small>
             Allocation totals are validated against settlement amount by the
-            backend; the UI prevents over-allocation in allocation workflows.
+            system; the UI prevents over-allocation in allocation workflows.
           </small>
         </div>
       </div>
