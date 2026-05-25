@@ -15,6 +15,7 @@ import { exportReportToCSV } from "../../utils/export";
 import { ReportFilters } from "./components/ReportFilters";
 import { ClaimsSummary } from "./components/ClaimsSummary";
 import { DetailedClaimsTable } from "./components/DetailedClaimsTable";
+import { DepartmentReportTable } from "./components/DepartmentReportTable";
 import { InsurancePerformanceTable } from "./components/InsurancePerformanceTable";
 import { SettlementReviewTable } from "./components/SettlementReviewTable";
 import { HospitalShareTable } from "./components/HospitalShareTable";
@@ -33,6 +34,7 @@ const HOSPITAL_NAME = APP_CONFIG.ORG_NAME;
 const REPORT_TABS = [
   { id: "claims-summary", label: "Claims Summary" },
   { id: "detailed-claims", label: "Detailed Claims" },
+  { id: "department-report", label: "Department-wise Report" },
   { id: "insurance-performance", label: "Insurance Company Performance" },
   { id: "settlement-review", label: "Settlement Financial Review" },
   { id: "hospital-share", label: "Hospital Share & Vendor Payout" },
@@ -83,8 +85,8 @@ export function ReportsPage() {
   const [endYear, setEndYear] = useState(() => new Date().getFullYear());
   const [endMonth, setEndMonth] = useState(() => new Date().getMonth() + 1);
 
-  const [patientId, setPatientId] = useState("");
-  const [patientInput, setPatientInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
 
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
     {
@@ -261,9 +263,9 @@ export function ReportsPage() {
   });
 
   const patient = useQuery<ReportSummaryRow[]>({
-    queryKey: ["reports", "patient", patientId],
-    enabled: patientId.length > 0,
-    queryFn: () => reportApi.patientClaims(patientId) as any,
+    queryKey: ["reports", "patient", appliedSearchTerm],
+    enabled: appliedSearchTerm.length > 0,
+    queryFn: () => reportApi.patientClaims(appliedSearchTerm) as any,
   });
 
   const patientsQuery = useQuery({
@@ -308,30 +310,260 @@ export function ReportsPage() {
 
   const monthlyData = monthly.data as any;
 
-  const summary = useMemo<ReportSummaryRow[]>(() => {
-    const rawSummary = monthlyData?.summary ?? monthlyData;
-    return Array.isArray(rawSummary) ? rawSummary : [];
-  }, [monthlyData]);
-
-  const detailedClaims = useMemo<DetailedClaim[]>(() => {
-    return Array.isArray(monthlyData?.detailedClaims)
+  const filteredDetailedClaims = useMemo<DetailedClaim[]>(() => {
+    const claims = Array.isArray(monthlyData?.detailedClaims)
       ? monthlyData.detailedClaims
       : [];
-  }, [monthlyData]);
+    if (!appliedSearchTerm) return claims;
+    const term = appliedSearchTerm.toLowerCase().trim();
+    return claims.filter((claim: DetailedClaim) => {
+      const pName = (patientMap.get(claim.patientId) || claim.patientName || "").toLowerCase();
+      const dName = (doctorMap.get(claim.doctorId) || (typeof claim.doctor === "object" && claim.doctor?.name) || "").toLowerCase();
+      const deptName = (departmentMap.get(claim.departmentId) || (typeof claim.department === "object" && claim.department?.name) || "").toLowerCase();
+      return (
+        claim.claimNumber?.toLowerCase().includes(term) ||
+        claim.claimId?.toLowerCase().includes(term) ||
+        claim.patientId?.toLowerCase().includes(term) ||
+        pName.includes(term) ||
+        dName.includes(term) ||
+        deptName.includes(term) ||
+        claim.type?.toLowerCase().includes(term) ||
+        claim.status?.toLowerCase().includes(term)
+      );
+    });
+  }, [monthlyData?.detailedClaims, appliedSearchTerm, patientMap, doctorMap, departmentMap]);
+
+  const summary = useMemo<ReportSummaryRow[]>(() => {
+    if (!appliedSearchTerm) {
+      const rawSummary = monthlyData?.summary ?? monthlyData;
+      return Array.isArray(rawSummary) ? rawSummary : [];
+    }
+    const statusMap = new Map<string, { count: number; totalAmount: number }>();
+    for (const claim of filteredDetailedClaims) {
+      const status = claim.status || "UNKNOWN";
+      const current = statusMap.get(status) || { count: 0, totalAmount: 0 };
+      current.count += 1;
+      current.totalAmount += claim.totalClaimAmount || 0;
+      statusMap.set(status, current);
+    }
+    return Array.from(statusMap.entries()).map(([status, val]) => ({
+      _id: status,
+      count: val.count,
+      totalAmount: val.totalAmount,
+    }));
+  }, [monthlyData, filteredDetailedClaims, appliedSearchTerm]);
+
+  const detailedClaims = filteredDetailedClaims;
 
   const totalClaims = useMemo<number>(() => {
-    return (
-      monthlyData?.totalClaims ??
-      summary.reduce((sum, r) => sum + (r.count ?? 0), 0)
-    );
-  }, [monthlyData, summary]);
+    return detailedClaims.length;
+  }, [detailedClaims]);
 
   const totalAmount = useMemo<number>(() => {
-    return (
-      monthlyData?.totalAmount ??
-      summary.reduce((sum, r) => sum + (r.totalAmount ?? 0), 0)
+    return detailedClaims.reduce((sum: number, r: DetailedClaim) => sum + (r.totalClaimAmount ?? 0), 0);
+  }, [detailedClaims]);
+
+  const sData = settlementReport.data;
+
+  const filteredSettlements = useMemo(() => {
+    const list = sData?.settlements || [];
+    if (!appliedSearchTerm) return list;
+    const term = appliedSearchTerm.toLowerCase().trim();
+    return list.filter((s: any) => {
+      const pName = (patientMap.get(s.patientId) || "").toLowerCase();
+      const deptName = (departmentMap.get(s.departmentId) || "").toLowerCase();
+      return (
+        s.claimNumber?.toLowerCase().includes(term) ||
+        s.claimId?.toLowerCase().includes(term) ||
+        s.patientId?.toLowerCase().includes(term) ||
+        pName.includes(term) ||
+        deptName.includes(term) ||
+        s.insuranceCompany?.toLowerCase().includes(term) ||
+        s.settlementMethod?.toLowerCase().includes(term)
+      );
+    });
+  }, [sData?.settlements, appliedSearchTerm, patientMap, departmentMap]);
+
+  const filteredSettlementTotals = useMemo(() => {
+    return filteredSettlements.reduce(
+      (acc: any, s: any) => {
+        acc.totalApproved += s.approvedAmount || 0;
+        acc.totalDeductions += s.deductions || 0;
+        acc.totalTds += s.tds || 0;
+        acc.totalHospitalDiscount += s.hospitalDiscount || 0;
+        acc.totalNetPayable += s.netPayable || 0;
+        acc.totalClaimAmount += s.totalClaimAmount || 0;
+        return acc;
+      },
+      {
+        totalApproved: 0,
+        totalDeductions: 0,
+        totalTds: 0,
+        totalHospitalDiscount: 0,
+        totalNetPayable: 0,
+        totalClaimAmount: 0,
+      }
     );
-  }, [monthlyData, summary]);
+  }, [filteredSettlements]);
+
+  const filteredHospitalShareRows = useMemo(() => {
+    const list = hospitalShare.data?.rows || [];
+    if (!appliedSearchTerm) return list;
+    const term = appliedSearchTerm.toLowerCase().trim();
+    return list.filter((r: any) => {
+      return (
+        r.claimNumber?.toLowerCase().includes(term) ||
+        r.claimId?.toLowerCase().includes(term) ||
+        r.insuranceCompany?.toLowerCase().includes(term)
+      );
+    });
+  }, [hospitalShare.data?.rows, appliedSearchTerm]);
+
+  const filteredHospitalShareTotals = useMemo(() => {
+    return filteredHospitalShareRows.reduce(
+      (acc: any, r: any) => {
+        acc.totalApproved += r.approvedAmount || 0;
+        acc.totalNetPayable += r.netPayable || 0;
+        acc.totalPharmacyShare += r.pharmacyShare || 0;
+        acc.totalLabShare += r.labShare || 0;
+        acc.totalRadiologyShare += r.radiologyShare || 0;
+        acc.totalVendorPayout += r.vendorPayout || 0;
+        acc.totalHospitalShare += r.hospitalShare || 0;
+        return acc;
+      },
+      {
+        totalApproved: 0,
+        totalNetPayable: 0,
+        totalPharmacyShare: 0,
+        totalLabShare: 0,
+        totalRadiologyShare: 0,
+        totalVendorPayout: 0,
+        totalHospitalShare: 0,
+      }
+    );
+  }, [filteredHospitalShareRows]);
+
+  const filteredInsuranceData = useMemo(() => {
+    const list = insurance.data || [];
+    if (!appliedSearchTerm) return list;
+    const term = appliedSearchTerm.toLowerCase().trim();
+    return list.filter((row) =>
+      row.companyName?.toLowerCase().includes(term)
+    );
+  }, [insurance.data, appliedSearchTerm]);
+
+  const departmentReportData = useMemo(() => {
+    const list = filteredSettlements;
+    const groupsMap = new Map<string, {
+      departmentId: string;
+      departmentName: string;
+      rows: any[];
+      totals: {
+        approvedAmount: number;
+        deductions: number;
+        tds: number;
+        pharmacy: number;
+        lab: number;
+        radiology: number;
+        others: number;
+        netPayable: number;
+      };
+    }>();
+
+    for (const s of list) {
+      const deptId = s.departmentId || "unknown";
+      const deptName = departmentMap.get(deptId) || "General / Other";
+
+      let pharmacy = 0;
+      let lab = 0;
+      let radiology = 0;
+      let others = 0;
+
+      for (const item of s.departmentBreakdown || []) {
+        if (item.departmentCategory === "PHARMACY") {
+          pharmacy = item.netAmount ?? 0;
+        } else if (item.departmentCategory === "LABORATORY") {
+          lab = item.netAmount ?? 0;
+        } else if (item.departmentCategory === "RADIOLOGY") {
+          radiology = item.netAmount ?? 0;
+        } else {
+          others += item.netAmount ?? 0;
+        }
+      }
+
+      let group = groupsMap.get(deptId);
+      if (!group) {
+        group = {
+          departmentId: deptId,
+          departmentName: deptName,
+          rows: [],
+          totals: {
+            approvedAmount: 0,
+            deductions: 0,
+            tds: 0,
+            pharmacy: 0,
+            lab: 0,
+            radiology: 0,
+            others: 0,
+            netPayable: 0,
+          },
+        };
+        groupsMap.set(deptId, group);
+      }
+
+      group.rows.push({
+        claimId: s.claimId,
+        claimNumber: s.claimNumber,
+        patientId: s.patientId,
+        patientName: patientMap.get(s.patientId) || "Unknown",
+        approvedAmount: s.approvedAmount || 0,
+        deductions: s.deductions || 0,
+        tds: s.tds || 0,
+        pharmacy,
+        lab,
+        radiology,
+        others,
+        netPayable: s.netPayable || 0,
+      });
+
+      group.totals.approvedAmount += s.approvedAmount || 0;
+      group.totals.deductions += s.deductions || 0;
+      group.totals.tds += s.tds || 0;
+      group.totals.pharmacy += pharmacy;
+      group.totals.lab += lab;
+      group.totals.radiology += radiology;
+      group.totals.others += others;
+      group.totals.netPayable += s.netPayable || 0;
+    }
+
+    const groups = Array.from(groupsMap.values()).sort((a, b) => a.departmentName.localeCompare(b.departmentName));
+
+    const grandTotals = groups.reduce(
+      (acc: any, g: any) => {
+        acc.approvedAmount += g.totals.approvedAmount;
+        acc.deductions += g.totals.deductions;
+        acc.tds += g.totals.tds;
+        acc.pharmacy += g.totals.pharmacy;
+        acc.lab += g.totals.lab;
+        acc.radiology += g.totals.radiology;
+        acc.others += g.totals.others;
+        acc.netPayable += g.totals.netPayable;
+        return acc;
+      },
+      {
+        approvedAmount: 0,
+        deductions: 0,
+        tds: 0,
+        pharmacy: 0,
+        lab: 0,
+        radiology: 0,
+        others: 0,
+        netPayable: 0,
+      }
+    );
+
+    return { groups, grandTotals };
+  }, [filteredSettlements, departmentMap, patientMap]);
 
   const sharedExportBase = {
     periodLabel,
@@ -351,8 +583,6 @@ export function ReportsPage() {
     endYear,
     endMonth,
   } as const;
-
-  const sData = settlementReport.data;
 
   const exportHandlers: Record<TabId, (() => void) | null> = {
     "claims-summary": () =>
@@ -382,10 +612,23 @@ export function ReportsPage() {
             })
         : null,
 
+    "department-report": () =>
+      exportReportToCSV({
+        ...sharedExportBase,
+        insuranceData: [],
+        settlements: [],
+        settlementTotals: emptySettlementTotals,
+        settlementCount: 0,
+        detailedClaims: [],
+        visibleColumns,
+        departmentReportData,
+        exportScope: "department-report",
+      }),
+
     "insurance-performance": () =>
       exportReportToCSV({
         ...sharedExportBase,
-        insuranceData: insurance.data ?? [],
+        insuranceData: filteredInsuranceData,
         settlements: [],
         settlementTotals: emptySettlementTotals,
         settlementCount: 0,
@@ -398,9 +641,9 @@ export function ReportsPage() {
       exportReportToCSV({
         ...sharedExportBase,
         insuranceData: [],
-        settlements: sData?.settlements ?? [],
-        settlementTotals: sData?.totals ?? emptySettlementTotals,
-        settlementCount: sData?.count ?? 0,
+        settlements: filteredSettlements,
+        settlementTotals: filteredSettlementTotals,
+        settlementCount: filteredSettlements.length,
         detailedClaims: [],
         visibleColumns,
         exportScope: "settlement-review",
@@ -415,7 +658,11 @@ export function ReportsPage() {
         settlementCount: 0,
         detailedClaims: [],
         visibleColumns,
-        hospitalShareData: hospitalShare.data,
+        hospitalShareData: {
+          rows: filteredHospitalShareRows,
+          totals: filteredHospitalShareTotals,
+          count: filteredHospitalShareRows.length,
+        },
         exportScope: "hospital-share",
       }),
   };
@@ -467,9 +714,9 @@ export function ReportsPage() {
         setEndYear={setEndYear}
         endMonth={endMonth}
         setEndMonth={setEndMonth}
-        patientInput={patientInput}
-        setPatientInput={setPatientInput}
-        onSearchPatient={setPatientId}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSearch={setAppliedSearchTerm}
         now={now}
       />
 
@@ -573,7 +820,7 @@ export function ReportsPage() {
             labelize={labelize}
           />
 
-          {patient.isLoading && patientId && <Skeleton rows={3} />}
+          {patient.isLoading && appliedSearchTerm && <Skeleton rows={3} />}
           {patient.isError && <ErrorPanel error={patient.error} />}
           {patient.data && patient.data.length > 0 && (
             <div style={{ marginBottom: 24 }}>
@@ -587,7 +834,7 @@ export function ReportsPage() {
                   marginBottom: 12,
                 }}
               >
-                Patient Claim Summary - {patientId}
+                Patient Claim Summary - {appliedSearchTerm}
               </h3>
               <div className="report-summary">
                 {patient.data.map((row: any) => (
@@ -629,7 +876,23 @@ export function ReportsPage() {
           />
         </div>
 
-        {/* 3. Insurance Company Performance */}
+        {/* 3. Department-wise Report */}
+        <div
+          id="tabpanel-department-report"
+          role="tabpanel"
+          aria-labelledby="tab-department-report"
+          data-report-tab="department-report"
+          hidden={activeTab !== "department-report"}
+        >
+          <DepartmentReportTable
+            groups={departmentReportData.groups}
+            grandTotals={departmentReportData.grandTotals}
+            isLoading={settlementReport.isLoading}
+            formatCurrency={formatCurrency}
+          />
+        </div>
+
+        {/* 4. Insurance Company Performance */}
         <div
           id="tabpanel-insurance-performance"
           role="tabpanel"
@@ -638,13 +901,13 @@ export function ReportsPage() {
           hidden={activeTab !== "insurance-performance"}
         >
           <InsurancePerformanceTable
-            insuranceData={insurance.data ?? []}
+            insuranceData={filteredInsuranceData}
             isLoading={insurance.isLoading}
             formatCurrency={formatCurrency}
           />
         </div>
 
-        {/* 4. Settlement Financial Review */}
+        {/* 5. Settlement Financial Review */}
         <div
           id="tabpanel-settlement-review"
           role="tabpanel"
@@ -653,14 +916,18 @@ export function ReportsPage() {
           hidden={activeTab !== "settlement-review"}
         >
           <SettlementReviewTable
-            settlementData={settlementReport.data}
+            settlementData={{
+              settlements: filteredSettlements,
+              totals: filteredSettlementTotals,
+              count: filteredSettlements.length,
+            }}
             isLoading={settlementReport.isLoading}
             formatCurrency={formatCurrency}
             labelize={labelize}
           />
         </div>
 
-        {/* 5. Hospital Share & Vendor Payout */}
+        {/* 6. Hospital Share & Vendor Payout */}
         <div
           id="tabpanel-hospital-share"
           role="tabpanel"
@@ -669,7 +936,11 @@ export function ReportsPage() {
           hidden={activeTab !== "hospital-share"}
         >
           <HospitalShareTable
-            data={hospitalShare.data}
+            data={{
+              rows: filteredHospitalShareRows,
+              totals: filteredHospitalShareTotals,
+              count: filteredHospitalShareRows.length,
+            }}
             isLoading={hospitalShare.isLoading}
             formatCurrency={formatCurrency}
           />

@@ -222,6 +222,8 @@ export class ReportService {
           settlementMethod: "$settlementMethod",
           settlementDate: "$settlementDate",
           totalClaimAmount: { $ifNull: ["$claim.totalClaimAmount", 0] },
+          departmentId: "$claim.departmentId",
+          departmentBreakdown: { $ifNull: ["$departmentBreakdown", []] },
         },
       },
       { $sort: { settlementDate: -1 } },

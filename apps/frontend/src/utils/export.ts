@@ -37,6 +37,15 @@ interface ExportReportParams {
     totals: any;
     count: number;
   };
+  departmentReportData?: {
+    groups: Array<{
+      departmentId: string;
+      departmentName: string;
+      rows: any[];
+      totals: any;
+    }>;
+    grandTotals: any;
+  };
 }
 
 export const exportReportToCSV = ({
@@ -63,6 +72,7 @@ export const exportReportToCSV = ({
   endYear,
   endMonth,
   hospitalShareData,
+  departmentReportData,
 }: ExportReportParams) => {
   const sections: string[] = [];
 
@@ -253,6 +263,36 @@ export const exportReportToCSV = ({
     if (totals) {
       sections.push(
         `"TOTALS","","","${totals.totalApproved ?? 0}","${totals.totalNetPayable ?? 0}","${totals.totalPharmacyShare ?? 0}","${totals.totalLabShare ?? 0}","${totals.totalRadiologyShare ?? 0}","${totals.totalVendorPayout ?? 0}","${totals.totalHospitalShare ?? 0}"`
+      );
+    }
+    sections.push(""); // spacer
+  }
+
+  // --- Section 6: Department-wise Report ---
+  if (departmentReportData && departmentReportData.groups && departmentReportData.groups.length > 0) {
+    sections.push(`"DEPARTMENT-WISE FINANCIAL REPORT"`);
+    sections.push("");
+
+    departmentReportData.groups.forEach((group) => {
+      sections.push(`"DEPARTMENT: ${group.departmentName.toUpperCase()}"`);
+      sections.push(
+        `"Patient ID / Name","Claim No.","Approved Amount","Deductions","TDS","Pharmacy","Laboratory","Radiology","Others","Net Payable"`
+      );
+      group.rows.forEach((row) => {
+        sections.push(
+          `"${row.patientName} (${row.patientId})","${row.claimNumber || "—"}","${row.approvedAmount}","${row.deductions}","${row.tds}","${row.pharmacy}","${row.lab}","${row.radiology}","${row.others}","${row.netPayable}"`
+        );
+      });
+      sections.push(
+        `"DEPARTMENT TOTAL","","${group.totals.approvedAmount}","${group.totals.deductions}","${group.totals.tds}","${group.totals.pharmacy}","${group.totals.lab}","${group.totals.radiology}","${group.totals.others}","${group.totals.netPayable}"`
+      );
+      sections.push(""); // spacer
+    });
+
+    const gt = departmentReportData.grandTotals;
+    if (gt) {
+      sections.push(
+        `"GRAND TOTALS","","${gt.approvedAmount}","${gt.deductions}","${gt.tds}","${gt.pharmacy}","${gt.lab}","${gt.radiology}","${gt.others}","${gt.netPayable}"`
       );
     }
     sections.push(""); // spacer

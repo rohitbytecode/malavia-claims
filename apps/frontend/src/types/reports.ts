@@ -53,6 +53,16 @@ export interface SettlementRow {
   netPayable: number;
   settlementMethod: string;
   settlementDate: string;
+  departmentId?: string;
+  departmentBreakdown?: Array<{
+    departmentCategory: string;
+    claimedAmount: number;
+    approvedAmount: number;
+    deduction: number;
+    discountPercent: number;
+    discountAmount: number;
+    netAmount: number;
+  }>;
 }
 
 export interface SettlementTotals {

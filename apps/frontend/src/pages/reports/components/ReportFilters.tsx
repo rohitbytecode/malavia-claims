@@ -21,9 +21,9 @@ interface ReportFiltersProps {
   setEndYear: (y: number) => void;
   endMonth: number;
   setEndMonth: (m: number) => void;
-  patientInput: string;
-  setPatientInput: (input: string) => void;
-  onSearchPatient: (id: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  onSearch: (query: string) => void;
   now: Date;
   children?: React.ReactNode;
 }
@@ -47,20 +47,20 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
   setEndYear,
   endMonth,
   setEndMonth,
-  patientInput,
-  setPatientInput,
-  onSearchPatient,
+  searchQuery,
+  setSearchQuery,
+  onSearch,
   now,
   children,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      onSearchPatient(patientInput.trim());
+      onSearch(searchQuery.trim());
     }
   };
 
   const handleSearchClick = () => {
-    onSearchPatient(patientInput.trim());
+    onSearch(searchQuery.trim());
   };
 
   return (
@@ -282,9 +282,9 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
       >
         <input
           className="input"
-          placeholder="Patient ID for summary"
-          value={patientInput}
-          onChange={(e) => setPatientInput(e.target.value)}
+          placeholder="Search claims, patients, doctors..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
         />
         <button
