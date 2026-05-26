@@ -12,6 +12,10 @@ import {
 import { alertApi } from "../api/services";
 import type { Role } from "../types/domain";
 
+const nonPharmacyOperationalRoles = operationalRoles.filter(
+  (role) => role !== "PHARMACIST"
+);
+
 type NavIconName =
   | "dashboard"
   | "claims"
@@ -144,7 +148,7 @@ const NAV_ITEMS: {
     to: "/patients",
     label: "Patients",
     icon: "users",
-    roles: operationalRoles,
+    roles: nonPharmacyOperationalRoles,
     group: "operations",
   },
   {

@@ -42,9 +42,11 @@ const REPORT_TABS = [
 ] as const;
 
 type TabId = (typeof REPORT_TABS)[number]["id"];
+const PHARMACIST_REPORT_TAB_IDS = ["claims-summary", "detailed-claims"] as const;
 
-function buildPrintStyle(activeTab: TabId): string {
-  return REPORT_TABS.map(({ id }) =>
+
+function buildPrintStyle(activeTab: TabId, tabs: readonly { id: TabId }[]): string {
+  return tabs.map(({ id }) =>
     id !== activeTab
       ? `@media print { [data-report-tab="${id}"] { display: none !important; } }`
       : ""
@@ -64,6 +66,16 @@ export function ReportsPage() {
   const user = useAuthStore((s) => s.user);
 
   const [activeTab, setActiveTab] = useState<TabId>("claims-summary");
+
+  const visibleReportTabs = useMemo(() => {
+    if (user?.role === "PHARMACIST") {
+      return REPORT_TABS.filter((tab) =>
+        PHARMACIST_REPORT_TAB_IDS.includes(tab.id as any)
+      );
+    }
+
+    return REPORT_TABS;
+  }, [user?.role]);
 
   const [reportMode, setReportMode] = useState<
     "monthly" | "calendar" | "financial" | "custom"
@@ -678,7 +690,7 @@ export function ReportsPage() {
       styleEl.id = "report-print-style";
       document.head.appendChild(styleEl);
     }
-    styleEl.textContent = buildPrintStyle(activeTab);
+    styleEl.textContent = buildPrintStyle(activeTab, visibleReportTabs as any);
     window.print();
   };
 
@@ -728,7 +740,7 @@ export function ReportsPage() {
         role="tablist"
         aria-label="Report sections"
       >
-        {REPORT_TABS.map((tab) => (
+        {visibleReportTabs.map((tab) => (
           <button
             type="button"
             key={tab.id}

@@ -93,12 +93,16 @@ export class ClaimService {
     type: ClaimType | undefined,
     status: ClaimStatus | undefined,
     page: number,
-    limit: number
+    limit: number,
+    isPharmacist = false
   ) {
     const filter: Record<string, unknown> = {};
 
     if (type) filter.type = type;
     if (status) filter.status = status;
+    if (isPharmacist) {
+      filter.billBreakdown = { $elemMatch: { departmentCategory: "PHARMACY" } };
+    }
 
     const [claims, total] = await Promise.all([
       ClaimRepository.findClaims(filter, page, limit),
