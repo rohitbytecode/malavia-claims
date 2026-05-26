@@ -120,6 +120,9 @@ export const settlementApi = {
     refundAmount?: number;
     departmentBreakdown?: SettlementDepartmentBreakdown[];
     payerContractId?: string;
+    totalCompanyDiscount?: number;
+    totalVendorPayout?: number;
+    hospitalNetShare?: number;
   }) => unwrap<Settlement>(apiClient.post("/settlements", body)),
 };
 export const allocationApi = {

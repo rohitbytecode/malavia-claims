@@ -13,7 +13,24 @@ import type {
   SettlementMethod,
   SettlementDepartmentBreakdown,
   PayerContract,
+  DepartmentPolicyItem,
 } from "../../types/domain";
+
+const VENDOR_DEPARTMENTS: string[] = ["PHARMACY", "LABORATORY", "RADIOLOGY"];
+
+type DiscountSource = "POLICY" | "DEFAULT" | "MANUAL";
+
+interface SettlementLineState extends SettlementDepartmentBreakdown {
+  companyDiscountPercent: number;
+  companyDiscountAmount: number;
+  vendorDiscountPercent: number;
+  vendorDiscountAmount: number;
+  vendorPayout: number;
+  hospitalShare: number;
+  companyDiscountSource: "DEFAULT" | "MANUAL";
+  vendorDiscountSource: "POLICY" | "DEFAULT" | "MANUAL";
+}
+
 import { formatCurrency, formatDateTime, labelize } from "../../utils/format";
 import { Button } from "../ui/Button";
 import { ErrorPanel } from "../ui/ErrorPanel";
@@ -49,9 +66,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
   const hasBillBreakdown = billBreakdown.length > 0;
 
   // Initialize department lines from bill breakdown
-  const [deptLines, setDeptLines] = useState<SettlementDepartmentBreakdown[]>(
-    []
-  );
+  const [deptLines, setDeptLines] = useState<SettlementLineState[]>([]);
   const [method, setMethod] = useState<SettlementMethod>("PORTAL");
   const [hospitalDiscount, setHospitalDiscount] = useState(0);
   const [tds, setTds] = useState(0);
@@ -61,44 +76,78 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
   // Build initial department lines when data is available
   useEffect(() => {
     if (billBreakdown.length > 0) {
-      const policyMap = new Map(
+      const policyMap = new Map<string, DepartmentPolicyItem>(
         (contract?.departmentPolicies ?? []).flatMap((p) =>
-          p.isApplicable !== false ? [[p.departmentCategory, p]] : []
+          p.isApplicable !== false
+            ? [[p.departmentCategory, p] as [string, DepartmentPolicyItem]]
+            : []
         )
       );
 
-      const lines: SettlementDepartmentBreakdown[] = billBreakdown.flatMap(
-        (b) => {
-          if (b.amount <= 0) return [];
-          const policy = policyMap.get(b.departmentCategory);
-          const claimed = b.amount;
-          const approved = claimed;
+      const lines: SettlementLineState[] = billBreakdown.flatMap((b) => {
+        if (b.amount <= 0) return [];
+        const policy = policyMap.get(b.departmentCategory);
+        const claimed = b.amount;
+        const approved = claimed;
 
-          const discountPct =
-            policy !== undefined && policy.discountPercent !== 0
-              ? policy.discountPercent
-              : contract?.defaultHospitalDiscountPercent || 0;
-          let discountAmt = (approved * discountPct) / 100;
+        // Company Discount (given to insurance company)
+        const companyDiscountPercent =
+          contract?.defaultHospitalDiscountPercent || 0;
+        const companyDiscountAmount =
+          Math.round(((approved * companyDiscountPercent) / 100) * 100) / 100;
+        const netAmount =
+          Math.round((approved - companyDiscountAmount) * 100) / 100;
 
-          if (
-            policy?.maxDiscountAmount &&
-            discountAmt > policy.maxDiscountAmount
-          ) {
-            discountAmt = policy.maxDiscountAmount;
-          }
-          const net = Math.max(0, approved - discountAmt);
-          return {
-            departmentCategory: b.departmentCategory,
-            claimedAmount: claimed,
-            approvedAmount: approved,
-            deduction: Math.max(0, claimed - approved),
-            discountPercent: discountPct,
-            discountAmount: Math.round(discountAmt * 100) / 100,
-            netAmount: Math.round(net * 100) / 100,
-            remarks: "",
-          };
+        // Vendor Discount (deducted from vendor payout)
+        const hasDeptPolicy = policy !== undefined;
+        const vendorDiscountPercent = hasDeptPolicy
+          ? policy.discountPercent
+          : contract?.defaultHospitalDiscountPercent || 0;
+        const vendorDiscountSource = hasDeptPolicy ? "POLICY" : "DEFAULT";
+
+        let vendorDiscountAmount = (approved * vendorDiscountPercent) / 100;
+        if (
+          policy?.maxDiscountAmount &&
+          vendorDiscountAmount > policy.maxDiscountAmount
+        ) {
+          vendorDiscountAmount = policy.maxDiscountAmount;
         }
-      );
+        vendorDiscountAmount = Math.round(vendorDiscountAmount * 100) / 100;
+
+        const isVendorDept = VENDOR_DEPARTMENTS.includes(b.departmentCategory);
+        const vendorPayout = isVendorDept
+          ? Math.max(
+              0,
+              Math.round((approved - vendorDiscountAmount) * 100) / 100
+            )
+          : 0;
+
+        const hospitalShare = isVendorDept
+          ? Math.round((vendorDiscountAmount - companyDiscountAmount) * 100) /
+            100
+          : netAmount;
+
+        return {
+          departmentCategory: b.departmentCategory,
+          claimedAmount: claimed,
+          approvedAmount: approved,
+          deduction: Math.max(0, claimed - approved),
+          // Backward compatibility fields:
+          discountPercent: companyDiscountPercent,
+          discountAmount: companyDiscountAmount,
+          netAmount,
+          // New explicit fields:
+          companyDiscountPercent,
+          companyDiscountAmount,
+          vendorDiscountPercent,
+          vendorDiscountAmount,
+          vendorPayout,
+          hospitalShare,
+          companyDiscountSource: "DEFAULT",
+          vendorDiscountSource,
+          remarks: "",
+        };
+      });
       setDeptLines(lines);
 
       if (contract) {
@@ -110,12 +159,6 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
           (initialTotalNet * (contract.tdsPercent || 0)) / 100
         );
         setTds(initialTds);
-
-        const initialTotalDiscount = lines.reduce(
-          (sum, line) => sum + line.discountAmount,
-          0
-        );
-        setHospitalDiscount(initialTotalDiscount);
       }
     } else {
       if (contract) {
@@ -139,41 +182,64 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
 
   const updateLine = (
     idx: number,
-    field: keyof SettlementDepartmentBreakdown,
+    field: keyof SettlementLineState,
     value: unknown
   ) => {
     setDeptLines((prev) => {
       const next = [...prev];
       const line = { ...next[idx], [field]: value };
 
-      // Recalculate derived fields
-      if (field === "approvedAmount" || field === "discountPercent") {
-        const approved =
-          field === "approvedAmount" ? (value as number) : line.approvedAmount;
-        const discPct =
-          field === "discountPercent"
-            ? (value as number)
-            : line.discountPercent;
-        line.deduction = Math.max(0, line.claimedAmount - approved);
-        let discAmt = (approved * discPct) / 100;
+      const approved = line.approvedAmount;
+      line.deduction = Math.max(0, line.claimedAmount - approved);
 
-        // Respect max discount from contract
-        const contractPolicy = contract?.departmentPolicies?.find(
-          (p) => p.departmentCategory === line.departmentCategory
-        );
-        if (
-          contractPolicy?.maxDiscountAmount &&
-          discAmt > contractPolicy.maxDiscountAmount
-        ) {
-          discAmt = contractPolicy.maxDiscountAmount;
-        }
+      // 1. Recalculate Company Discount
+      const companyPct = line.companyDiscountPercent;
+      line.companyDiscountAmount =
+        Math.round(((approved * companyPct) / 100) * 100) / 100;
+      line.netAmount =
+        Math.round((approved - line.companyDiscountAmount) * 100) / 100;
 
-        line.discountAmount = Math.round(discAmt * 100) / 100;
-        line.netAmount = Math.max(
-          0,
-          Math.round((approved - line.discountAmount) * 100) / 100
-        );
+      // 2. Recalculate Vendor Discount
+      const vendorPct = line.vendorDiscountPercent;
+      let vendorAmt = (approved * vendorPct) / 100;
+      const contractPolicy = contract?.departmentPolicies?.find(
+        (p) => p.departmentCategory === line.departmentCategory
+      );
+      if (
+        contractPolicy?.maxDiscountAmount &&
+        vendorAmt > contractPolicy.maxDiscountAmount
+      ) {
+        vendorAmt = contractPolicy.maxDiscountAmount;
       }
+      line.vendorDiscountAmount = Math.round(vendorAmt * 100) / 100;
+
+      // 3. Recalculate Vendor Payout
+      const isVendorDept = VENDOR_DEPARTMENTS.includes(line.departmentCategory);
+      line.vendorPayout = isVendorDept
+        ? Math.max(
+            0,
+            Math.round((approved - line.vendorDiscountAmount) * 100) / 100
+          )
+        : 0;
+
+      // 4. Recalculate Hospital Share
+      line.hospitalShare = isVendorDept
+        ? Math.round(
+            (line.vendorDiscountAmount - line.companyDiscountAmount) * 100
+          ) / 100
+        : line.netAmount;
+
+      // 5. Update discount source indicators
+      if (field === "companyDiscountPercent") {
+        line.companyDiscountSource = "MANUAL";
+      }
+      if (field === "vendorDiscountPercent") {
+        line.vendorDiscountSource = "MANUAL";
+      }
+
+      // Sync backward compatibility fields:
+      line.discountPercent = line.companyDiscountPercent;
+      line.discountAmount = line.companyDiscountAmount;
 
       next[idx] = line;
       return next;
@@ -185,16 +251,25 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
     const totalClaimed = deptLines.reduce((s, l) => s + l.claimedAmount, 0);
     const totalApproved = deptLines.reduce((s, l) => s + l.approvedAmount, 0);
     const totalDeductions = deptLines.reduce((s, l) => s + l.deduction, 0);
-    const totalDiscounts = deptLines.reduce((s, l) => s + l.discountAmount, 0);
-    const totalNet = deptLines.reduce((s, l) => s + l.netAmount, 0);
+    const totalCompanyDiscount = deptLines.reduce(
+      (s, l) => s + l.companyDiscountAmount,
+      0
+    );
+    const totalVendorPayout = deptLines.reduce((s, l) => s + l.vendorPayout, 0);
+    const totalHospitalShare = deptLines.reduce(
+      (s, l) => s + l.hospitalShare,
+      0
+    );
 
     const activeApproved = hasBillBreakdown
       ? totalApproved
       : claim.totalClaimAmount;
-    const activeDiscount = hasBillBreakdown ? totalDiscounts : hospitalDiscount;
-    const activeNet = Math.max(0, activeApproved - activeDiscount);
+    const activeCompanyDiscount = hasBillBreakdown
+      ? totalCompanyDiscount
+      : hospitalDiscount;
+    const activeNet = Math.max(0, activeApproved - activeCompanyDiscount);
 
-    // TDS on total net (after deductions and after discount)
+    // TDS on total net (after deductions and after company discount)
     const tdsPercent = contract?.tdsPercent ?? 0;
     const tdsAmount = Math.round((activeNet * tdsPercent) / 100);
 
@@ -206,15 +281,21 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         extraRefund
     );
 
+    // Hospital Share Net is what the hospital actually keeps (taking into account TDS and refunds)
+    const hospitalNetShare =
+      Math.round((netPayable - totalVendorPayout) * 100) / 100;
+
     return {
       totalClaimed,
       totalApproved,
       totalDeductions,
-      totalDiscounts,
-      totalNet,
+      totalCompanyDiscount,
+      totalVendorPayout,
+      totalHospitalShare,
       tdsPercent,
       tdsAmount,
       netPayable,
+      hospitalNetShare,
     };
   }, [
     deptLines,
@@ -244,7 +325,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         deductions: hasBillBreakdown ? totals.totalDeductions : 0,
         tds,
         hospitalDiscount: hasBillBreakdown
-          ? totals.totalDiscounts
+          ? totals.totalCompanyDiscount
           : hospitalDiscount,
         settlementMethod: method,
         settledBy: user?._id ?? "",
@@ -252,6 +333,14 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         refundAmount,
         departmentBreakdown: deptLines,
         payerContractId: contract?._id,
+        // New fields
+        totalCompanyDiscount: hasBillBreakdown
+          ? totals.totalCompanyDiscount
+          : hospitalDiscount,
+        totalVendorPayout: hasBillBreakdown ? totals.totalVendorPayout : 0,
+        hospitalNetShare: hasBillBreakdown
+          ? totals.hospitalNetShare
+          : claim.totalClaimAmount - hospitalDiscount - tds,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["settlement", claim.id] });
@@ -292,19 +381,35 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
               <dd>{formatCurrency(data.approvedAmount)}</dd>
               <dt>Total deductions</dt>
               <dd>{formatCurrency(data.deductions)}</dd>
-              <dt>Total discounts</dt>
+              <dt>Company Discount (Payer)</dt>
               <dd>
                 {formatCurrency(
-                  bd.reduce((s, l) => s + (l.discountAmount || 0), 0)
+                  data.totalCompanyDiscount ?? data.hospitalDiscount
                 )}
               </dd>
               <dt>TDS</dt>
               <dd>{formatCurrency(data.tds)}</dd>
-              <dt>Hospital discount</dt>
-              <dd>{formatCurrency(data.hospitalDiscount)}</dd>
-              <dt>Net payable</dt>
+              <dt>Net Payable from Company</dt>
               <dd>
                 <strong>{formatCurrency(data.netPayable)}</strong>
+              </dd>
+              <dt>Total Vendor Payout</dt>
+              <dd>{formatCurrency(data.totalVendorPayout ?? 0)}</dd>
+              <dt>Net Hospital Share (Without Vendor)</dt>
+              <dd
+                style={{
+                  padding: "4px 8px",
+                  background:
+                    "color-mix(in srgb, var(--emerald) 10%, transparent)",
+                  borderRadius: 4,
+                }}
+              >
+                <strong style={{ color: "var(--emerald)" }}>
+                  {formatCurrency(
+                    data.hospitalNetShare ??
+                      data.netPayable - (data.totalVendorPayout ?? 0)
+                  )}
+                </strong>
               </dd>
               <dt>Method</dt>
               <dd>{labelize(data.settlementMethod)}</dd>
@@ -364,67 +469,129 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                       Deducted
                     </th>
                     <th style={{ textAlign: "right", padding: "8px 6px" }}>
-                      Discount
+                      Company Discount
                     </th>
                     <th style={{ textAlign: "right", padding: "8px 6px" }}>
-                      Net
+                      Vendor Discount
+                    </th>
+                    <th style={{ textAlign: "right", padding: "8px 6px" }}>
+                      Company Net
+                    </th>
+                    <th style={{ textAlign: "right", padding: "8px 6px" }}>
+                      Vendor Payout
+                    </th>
+                    <th style={{ textAlign: "right", padding: "8px 6px" }}>
+                      Hospital Share
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {bd.map((line) => (
-                    <tr
-                      key={line.departmentCategory}
-                      style={{
-                        borderBottom:
-                          "1px solid color-mix(in srgb, var(--text-tertiary) 10%, transparent)",
-                      }}
-                    >
-                      <td style={{ padding: "8px 6px", fontWeight: 600 }}>
-                        {getCatLabel(line.departmentCategory)}
-                      </td>
-                      <td style={{ textAlign: "right", padding: "8px 6px" }}>
-                        {formatCurrency(line.claimedAmount)}
-                      </td>
-                      <td style={{ textAlign: "right", padding: "8px 6px" }}>
-                        {formatCurrency(line.approvedAmount)}
-                      </td>
-                      <td
+                  {bd.map((line) => {
+                    const isVendor = VENDOR_DEPARTMENTS.includes(
+                      line.departmentCategory
+                    );
+                    const compPct =
+                      line.companyDiscountPercent ?? line.discountPercent ?? 0;
+                    const compAmt =
+                      line.companyDiscountAmount ?? line.discountAmount ?? 0;
+                    const vendPct =
+                      line.vendorDiscountPercent ?? line.discountPercent ?? 0;
+                    const vendAmt =
+                      line.vendorDiscountAmount ?? line.discountAmount ?? 0;
+                    const netAmt = line.approvedAmount - compAmt;
+                    const vendPayout =
+                      line.vendorPayout ??
+                      (isVendor
+                        ? Math.max(0, line.approvedAmount - vendAmt)
+                        : 0);
+                    const hospShare =
+                      line.hospitalShare ??
+                      (isVendor ? vendAmt - compAmt : netAmt);
+
+                    return (
+                      <tr
+                        key={line.departmentCategory}
                         style={{
-                          textAlign: "right",
-                          padding: "8px 6px",
-                          color: line.deduction > 0 ? "var(--red)" : undefined,
+                          borderBottom:
+                            "1px solid color-mix(in srgb, var(--text-tertiary) 10%, transparent)",
                         }}
                       >
-                        {line.deduction > 0
-                          ? `−${formatCurrency(line.deduction)}`
-                          : "—"}
-                      </td>
-                      <td
-                        style={{
-                          textAlign: "right",
-                          padding: "8px 6px",
-                          color:
-                            line.discountAmount > 0
-                              ? "var(--amber)"
-                              : undefined,
-                        }}
-                      >
-                        {line.discountAmount > 0
-                          ? `−${formatCurrency(line.discountAmount)} (${line.discountPercent}%)`
-                          : "—"}
-                      </td>
-                      <td
-                        style={{
-                          textAlign: "right",
-                          padding: "8px 6px",
-                          fontWeight: 700,
-                        }}
-                      >
-                        {formatCurrency(line.netAmount)}
-                      </td>
-                    </tr>
-                  ))}
+                        <td style={{ padding: "8px 6px", fontWeight: 600 }}>
+                          {getCatLabel(line.departmentCategory)}
+                        </td>
+                        <td style={{ textAlign: "right", padding: "8px 6px" }}>
+                          {formatCurrency(line.claimedAmount)}
+                        </td>
+                        <td style={{ textAlign: "right", padding: "8px 6px" }}>
+                          {formatCurrency(line.approvedAmount)}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "right",
+                            padding: "8px 6px",
+                            color:
+                              line.deduction > 0 ? "var(--red)" : undefined,
+                          }}
+                        >
+                          {line.deduction > 0
+                            ? `−${formatCurrency(line.deduction)}`
+                            : "—"}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "right",
+                            padding: "8px 6px",
+                            color: compAmt > 0 ? "var(--amber)" : undefined,
+                          }}
+                        >
+                          {compAmt > 0
+                            ? `−${formatCurrency(compAmt)} (${compPct}%)`
+                            : "—"}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "right",
+                            padding: "8px 6px",
+                            color: vendAmt > 0 ? "var(--amber)" : undefined,
+                          }}
+                        >
+                          {vendAmt > 0
+                            ? `−${formatCurrency(vendAmt)} (${vendPct}%)`
+                            : "—"}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "right",
+                            padding: "8px 6px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {formatCurrency(netAmt)}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "right",
+                            padding: "8px 6px",
+                            color: isVendor
+                              ? "var(--blue)"
+                              : "var(--text-secondary)",
+                          }}
+                        >
+                          {isVendor ? formatCurrency(vendPayout) : "—"}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "right",
+                            padding: "8px 6px",
+                            fontWeight: 700,
+                            color: "var(--emerald)",
+                          }}
+                        >
+                          {formatCurrency(hospShare)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -481,9 +648,26 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
             marginBottom: 12,
           }}
         >
-          <strong>Payer contract active</strong> · TDS: {contract.tdsPercent}% ·
-          Hospital discount: {contract.defaultHospitalDiscountPercent}% ·
-          Department discounts auto-applied from contract.
+          <strong>Payer contract active</strong> · TDS: {contract.tdsPercent}%
+          {" · "}
+          Company default discount: {contract.defaultHospitalDiscountPercent}%
+          {(contract.departmentPolicies ?? []).filter(
+            (p) => p.isApplicable !== false
+          ).length > 0 && (
+            <>
+              {" · "}
+              <span style={{ color: "var(--green)" }}>
+                {(contract.departmentPolicies ?? [])
+                  .filter((p) => p.isApplicable !== false)
+                  .map(
+                    (p) =>
+                      `${getCatLabel(p.departmentCategory)}: ${p.discountPercent}%`
+                  )
+                  .join(", ")}
+              </span>
+              {" (hospital policy)"}
+            </>
+          )}
         </div>
       )}
 
@@ -537,106 +721,222 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                   <th style={{ textAlign: "right", padding: "6px" }}>
                     Deducted
                   </th>
-                  <th style={{ textAlign: "right", padding: "6px" }}>Disc %</th>
-                  <th style={{ textAlign: "right", padding: "6px" }}>Disc ₹</th>
-                  <th style={{ textAlign: "right", padding: "6px" }}>Net</th>
+                  <th style={{ textAlign: "right", padding: "6px" }}>
+                    Company Disc %
+                  </th>
+                  <th style={{ textAlign: "right", padding: "6px" }}>
+                    Vendor Disc %
+                  </th>
+                  <th style={{ textAlign: "right", padding: "6px" }}>
+                    Company Net
+                  </th>
+                  <th style={{ textAlign: "right", padding: "6px" }}>
+                    Vendor Payout
+                  </th>
+                  <th style={{ textAlign: "right", padding: "6px" }}>
+                    Hospital Share
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {deptLines.map((line, idx) => (
-                  <tr
-                    key={line.departmentCategory}
-                    style={{
-                      borderBottom:
-                        "1px solid color-mix(in srgb, var(--text-tertiary) 8%, transparent)",
-                    }}
-                  >
-                    <td style={{ padding: "6px", fontWeight: 600 }}>
-                      {getCatLabel(line.departmentCategory)}
-                    </td>
-                    <td style={{ textAlign: "right", padding: "6px" }}>
-                      {formatCurrency(line.claimedAmount)}
-                    </td>
-                    <td style={{ textAlign: "right", padding: "6px" }}>
-                      <input
-                        className="input"
-                        type="number"
-                        min={0}
-                        value={line.approvedAmount}
-                        onChange={(e) =>
-                          updateLine(
-                            idx,
-                            "approvedAmount",
-                            Number(e.target.value)
-                          )
-                        }
+                {deptLines.map((line, idx) => {
+                  const isVendor = VENDOR_DEPARTMENTS.includes(
+                    line.departmentCategory
+                  );
+                  return (
+                    <tr
+                      key={line.departmentCategory}
+                      style={{
+                        borderBottom:
+                          "1px solid color-mix(in srgb, var(--text-tertiary) 8%, transparent)",
+                      }}
+                    >
+                      <td style={{ padding: "6px", fontWeight: 600 }}>
+                        {getCatLabel(line.departmentCategory)}
+                      </td>
+                      <td style={{ textAlign: "right", padding: "6px" }}>
+                        {formatCurrency(line.claimedAmount)}
+                      </td>
+                      <td style={{ textAlign: "right", padding: "6px" }}>
+                        <input
+                          className="input"
+                          type="number"
+                          min={0}
+                          value={line.approvedAmount}
+                          onChange={(e) =>
+                            updateLine(
+                              idx,
+                              "approvedAmount",
+                              Number(e.target.value)
+                            )
+                          }
+                          style={{
+                            width: 80,
+                            fontSize: 12,
+                            padding: "3px 6px",
+                            textAlign: "right",
+                          }}
+                        />
+                      </td>
+                      <td
                         style={{
-                          width: 100,
-                          fontSize: 12,
-                          padding: "3px 6px",
                           textAlign: "right",
+                          padding: "6px",
+                          color: line.deduction > 0 ? "var(--red)" : undefined,
+                          fontSize: 11,
                         }}
-                      />
-                    </td>
-                    <td
-                      style={{
-                        textAlign: "right",
-                        padding: "6px",
-                        color: line.deduction > 0 ? "var(--red)" : undefined,
-                        fontSize: 11,
-                      }}
-                    >
-                      {line.deduction > 0
-                        ? `−${formatCurrency(line.deduction)}`
-                        : "—"}
-                    </td>
-                    <td style={{ textAlign: "right", padding: "6px" }}>
-                      <input
-                        className="input"
-                        type="number"
-                        min={0}
-                        max={100}
-                        step="0.5"
-                        value={line.discountPercent}
-                        onChange={(e) =>
-                          updateLine(
-                            idx,
-                            "discountPercent",
-                            Number(e.target.value)
-                          )
-                        }
+                      >
+                        {line.deduction > 0
+                          ? `−${formatCurrency(line.deduction)}`
+                          : "—"}
+                      </td>
+                      <td style={{ textAlign: "right", padding: "6px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-end",
+                            gap: 2,
+                          }}
+                        >
+                          <input
+                            className="input"
+                            type="number"
+                            min={0}
+                            max={100}
+                            step="0.5"
+                            value={line.companyDiscountPercent}
+                            onChange={(e) =>
+                              updateLine(
+                                idx,
+                                "companyDiscountPercent",
+                                Number(e.target.value)
+                              )
+                            }
+                            style={{
+                              width: 60,
+                              fontSize: 12,
+                              padding: "3px 6px",
+                              textAlign: "right",
+                            }}
+                          />
+                          <span
+                            style={{
+                              display: "inline-block",
+                              fontSize: 8,
+                              fontWeight: 700,
+                              letterSpacing: "0.3px",
+                              padding: "1px 4px",
+                              borderRadius: 3,
+                              background:
+                                line.companyDiscountSource === "MANUAL"
+                                  ? "color-mix(in srgb, var(--amber) 15%, transparent)"
+                                  : "color-mix(in srgb, var(--blue, #3b82f6) 15%, transparent)",
+                              color:
+                                line.companyDiscountSource === "MANUAL"
+                                  ? "var(--amber)"
+                                  : "var(--blue, #3b82f6)",
+                            }}
+                          >
+                            {line.companyDiscountSource === "MANUAL"
+                              ? "✏️ MANUAL"
+                              : "🏢 DEFAULT"}
+                          </span>
+                        </div>
+                      </td>
+                      <td style={{ textAlign: "right", padding: "6px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-end",
+                            gap: 2,
+                          }}
+                        >
+                          <input
+                            className="input"
+                            type="number"
+                            min={0}
+                            max={100}
+                            step="0.5"
+                            value={line.vendorDiscountPercent}
+                            onChange={(e) =>
+                              updateLine(
+                                idx,
+                                "vendorDiscountPercent",
+                                Number(e.target.value)
+                              )
+                            }
+                            style={{
+                              width: 60,
+                              fontSize: 12,
+                              padding: "3px 6px",
+                              textAlign: "right",
+                            }}
+                          />
+                          <span
+                            style={{
+                              display: "inline-block",
+                              fontSize: 8,
+                              fontWeight: 700,
+                              letterSpacing: "0.3px",
+                              padding: "1px 4px",
+                              borderRadius: 3,
+                              background:
+                                line.vendorDiscountSource === "POLICY"
+                                  ? "color-mix(in srgb, var(--green) 15%, transparent)"
+                                  : line.vendorDiscountSource === "MANUAL"
+                                    ? "color-mix(in srgb, var(--amber) 15%, transparent)"
+                                    : "color-mix(in srgb, var(--blue, #3b82f6) 15%, transparent)",
+                              color:
+                                line.vendorDiscountSource === "POLICY"
+                                  ? "var(--green)"
+                                  : line.vendorDiscountSource === "MANUAL"
+                                    ? "var(--amber)"
+                                    : "var(--blue, #3b82f6)",
+                            }}
+                          >
+                            {line.vendorDiscountSource === "POLICY"
+                              ? "🏥 POLICY"
+                              : line.vendorDiscountSource === "MANUAL"
+                                ? "✏️ MANUAL"
+                                : "🏢 DEFAULT"}
+                          </span>
+                        </div>
+                      </td>
+                      <td
                         style={{
-                          width: 60,
-                          fontSize: 12,
-                          padding: "3px 6px",
                           textAlign: "right",
+                          padding: "6px",
+                          fontWeight: 600,
                         }}
-                      />
-                    </td>
-                    <td
-                      style={{
-                        textAlign: "right",
-                        padding: "6px",
-                        color:
-                          line.discountAmount > 0 ? "var(--amber)" : undefined,
-                        fontSize: 11,
-                      }}
-                    >
-                      {line.discountAmount > 0
-                        ? formatCurrency(line.discountAmount)
-                        : "—"}
-                    </td>
-                    <td
-                      style={{
-                        textAlign: "right",
-                        padding: "6px",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {formatCurrency(line.netAmount)}
-                    </td>
-                  </tr>
-                ))}
+                      >
+                        {formatCurrency(line.netAmount)}
+                      </td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          padding: "6px",
+                          color: isVendor
+                            ? "var(--blue)"
+                            : "var(--text-secondary)",
+                        }}
+                      >
+                        {isVendor ? formatCurrency(line.vendorPayout) : "—"}
+                      </td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          padding: "6px",
+                          fontWeight: 700,
+                          color: "var(--emerald)",
+                        }}
+                      >
+                        {formatCurrency(line.hospitalShare)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
               <tfoot>
                 <tr
@@ -663,6 +963,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                     −{formatCurrency(totals.totalDeductions)}
                   </td>
                   <td style={{ padding: "8px 6px" }}></td>
+                  <td style={{ padding: "8px 6px" }}></td>
                   <td
                     style={{
                       textAlign: "right",
@@ -670,10 +971,25 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                       color: "var(--amber)",
                     }}
                   >
-                    −{formatCurrency(totals.totalDiscounts)}
+                    −{formatCurrency(totals.totalCompanyDiscount)}
                   </td>
-                  <td style={{ textAlign: "right", padding: "8px 6px" }}>
-                    {formatCurrency(totals.totalNet)}
+                  <td
+                    style={{
+                      textAlign: "right",
+                      padding: "8px 6px",
+                      color: "var(--blue)",
+                    }}
+                  >
+                    {formatCurrency(totals.totalVendorPayout)}
+                  </td>
+                  <td
+                    style={{
+                      textAlign: "right",
+                      padding: "8px 6px",
+                      color: "var(--emerald)",
+                    }}
+                  >
+                    {formatCurrency(totals.totalHospitalShare)}
                   </td>
                 </tr>
               </tfoot>
@@ -716,11 +1032,13 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         </label>
 
         <label className="field">
-          <span>Hospital discount (₹)</span>
+          <span>Company Discount (₹)</span>
           <input
             className="input"
             type="number"
-            value={hasBillBreakdown ? totals.totalDiscounts : hospitalDiscount}
+            value={
+              hasBillBreakdown ? totals.totalCompanyDiscount : hospitalDiscount
+            }
             onChange={(e) => setHospitalDiscount(Number(e.target.value))}
             readOnly={hasBillBreakdown}
             min={0}
@@ -754,11 +1072,35 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
           </small>
         </label>
 
-        <div className="readonly-total">
-          <span>Net Payable (auto-calculated)</span>
-          <strong style={{ fontSize: 18 }}>
-            {formatCurrency(totals.netPayable)}
-          </strong>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            width: "100%",
+            gridColumn: "1 / -1",
+          }}
+        >
+          <div className="readonly-total" style={{ flex: 1 }}>
+            <span>Net Payable from Company (auto-calculated)</span>
+            <strong style={{ fontSize: 18 }}>
+              {formatCurrency(totals.netPayable)}
+            </strong>
+          </div>
+          <div
+            className="readonly-total"
+            style={{
+              flex: 1,
+              borderLeft: "4px solid var(--emerald)",
+              background: "color-mix(in srgb, var(--emerald) 5%, transparent)",
+            }}
+          >
+            <span style={{ color: "var(--emerald)" }}>
+              Net Hospital Share (Without Vendor)
+            </span>
+            <strong style={{ fontSize: 18, color: "var(--emerald)" }}>
+              {formatCurrency(totals.hospitalNetShare)}
+            </strong>
+          </div>
         </div>
       </div>
 

@@ -156,10 +156,13 @@ export interface Settlement {
   _id: string;
   claimId: string;
   approvedAmount: number;
-  hospitalDiscount: number;
+  hospitalDiscount: number; // Stays as total company discount
   deductions: number;
   tds: number;
-  netPayable: number;
+  netPayable: number; // Paid by company
+  totalCompanyDiscount?: number;
+  totalVendorPayout?: number;
+  hospitalNetShare?: number;
   departmentBreakdown?: SettlementDepartmentBreakdown[];
   payerContractId?: string;
   settlementMethod: SettlementMethod;
@@ -360,9 +363,15 @@ export interface SettlementDepartmentBreakdown {
   claimedAmount: number;
   approvedAmount: number;
   deduction: number;
-  discountPercent: number;
-  discountAmount: number;
-  netAmount: number;
+  discountPercent: number; // Stays for backward compatibility
+  discountAmount: number; // Stays for backward compatibility
+  netAmount: number; // Stays for backward compatibility
+  companyDiscountPercent?: number;
+  companyDiscountAmount?: number;
+  vendorDiscountPercent?: number;
+  vendorDiscountAmount?: number;
+  vendorPayout?: number;
+  hospitalShare?: number;
   remarks?: string;
 }
 export interface DepartmentPolicyItem {

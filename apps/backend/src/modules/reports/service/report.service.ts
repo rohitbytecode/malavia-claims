@@ -297,6 +297,8 @@ export class ReportService {
           insuranceCompany: "$insurance.name",
           approvedAmount: { $ifNull: ["$approvedAmount", 0] },
           netPayable: { $ifNull: ["$netPayable", 0] },
+          totalVendorPayout: { $ifNull: ["$totalVendorPayout", undefined] },
+          hospitalNetShare: { $ifNull: ["$hospitalNetShare", undefined] },
           settlementDate: "$settlementDate",
           departmentBreakdown: { $ifNull: ["$departmentBreakdown", []] },
         },
@@ -310,17 +312,28 @@ export class ReportService {
       let radiologyShare = 0;
 
       for (const item of s.departmentBreakdown || []) {
+        const payoutVal =
+          item.vendorPayout !== undefined
+            ? item.vendorPayout
+            : (item.netAmount ?? 0);
         if (item.departmentCategory === "PHARMACY") {
-          pharmacyShare = item.netAmount ?? 0;
+          pharmacyShare = payoutVal;
         } else if (item.departmentCategory === "LABORATORY") {
-          labShare = item.netAmount ?? 0;
+          labShare = payoutVal;
         } else if (item.departmentCategory === "RADIOLOGY") {
-          radiologyShare = item.netAmount ?? 0;
+          radiologyShare = payoutVal;
         }
       }
 
-      const vendorPayout = pharmacyShare + labShare + radiologyShare;
-      const hospitalShare = Math.max(0, s.netPayable - vendorPayout);
+      const vendorPayout =
+        s.totalVendorPayout !== undefined && s.totalVendorPayout !== null
+          ? s.totalVendorPayout
+          : pharmacyShare + labShare + radiologyShare;
+
+      const hospitalShare =
+        s.hospitalNetShare !== undefined && s.hospitalNetShare !== null
+          ? s.hospitalNetShare
+          : Math.max(0, s.netPayable - vendorPayout);
 
       return {
         _id: s._id,

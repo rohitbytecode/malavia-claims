@@ -41,6 +41,37 @@ const departmentBreakdownSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    companyDiscountPercent: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    companyDiscountAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    vendorDiscountPercent: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    vendorDiscountAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    vendorPayout: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    hospitalShare: {
+      type: Number,
+      default: 0,
+    },
     remarks: {
       type: String,
       default: "",
@@ -84,6 +115,20 @@ const settlementSchema = new mongoose.Schema<SettlementDocument>(
       type: Number,
       required: true,
       min: 0,
+    },
+    totalCompanyDiscount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalVendorPayout: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    hospitalNetShare: {
+      type: Number,
+      default: 0,
     },
     departmentBreakdown: {
       type: [departmentBreakdownSchema],

@@ -20,6 +20,12 @@ interface DepartmentBreakdownItem {
   discountPercent: number;
   discountAmount: number;
   netAmount: number;
+  companyDiscountPercent?: number;
+  companyDiscountAmount?: number;
+  vendorDiscountPercent?: number;
+  vendorDiscountAmount?: number;
+  vendorPayout?: number;
+  hospitalShare?: number;
   remarks?: string;
 }
 
@@ -35,6 +41,9 @@ interface CreateSettlementParams {
   refundAmount?: number;
   departmentBreakdown?: DepartmentBreakdownItem[];
   payerContractId?: string;
+  totalCompanyDiscount?: number;
+  totalVendorPayout?: number;
+  hospitalNetShare?: number;
 }
 
 export class SettlementService {
@@ -81,9 +90,13 @@ export class SettlementService {
           Math.max(0, item.claimedAmount - item.approvedAmount),
         discountPercent: item.discountPercent ?? 0,
         discountAmount: item.discountAmount ?? 0,
-        netAmount:
-          item.netAmount ??
-          Math.max(0, item.approvedAmount - (item.discountAmount ?? 0)),
+        netAmount: item.netAmount ?? 0,
+        companyDiscountPercent: item.companyDiscountPercent ?? 0,
+        companyDiscountAmount: item.companyDiscountAmount ?? 0,
+        vendorDiscountPercent: item.vendorDiscountPercent ?? 0,
+        vendorDiscountAmount: item.vendorDiscountAmount ?? 0,
+        vendorPayout: item.vendorPayout ?? 0,
+        hospitalShare: item.hospitalShare ?? 0,
         remarks: item.remarks ?? "",
       })
     );
@@ -95,6 +108,9 @@ export class SettlementService {
       deductions,
       tds,
       netPayable,
+      totalCompanyDiscount: params.totalCompanyDiscount ?? hospitalDiscount,
+      totalVendorPayout: params.totalVendorPayout ?? 0,
+      hospitalNetShare: params.hospitalNetShare ?? 0,
       departmentBreakdown,
       payerContractId: params.payerContractId
         ? new Types.ObjectId(params.payerContractId)
