@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ClaimService } from "@/modules/claims/service/claim.service.js";
+import { Roles } from "@/core/enums/roles.enum.js";
+import { AppError } from "@/core/errors/AppError.js";
 
 export class ClaimController {
   static async createClaim(req: Request, res: Response, next: NextFunction) {
@@ -24,6 +26,16 @@ export class ClaimController {
 
       const claim = await ClaimService.getClaimById(claimId);
 
+      if (req.user?.role === Roles.PHARMACIST) {
+        const hasPharmacyItem = (claim.billBreakdown ?? []).some(
+          (item) => item.departmentCategory === "PHARMACY"
+        );
+
+        if (!hasPharmacyItem) {
+          throw new AppError("You do not have permission to view this claim", 403);
+        }
+      }
+
       return res.status(200).json({
         success: true,
         message: "Claim fetched successfully",
@@ -47,7 +59,8 @@ export class ClaimController {
         type as any,
         status as any,
         Number(page ?? 1),
-        Number(limit ?? 20)
+        Number(limit ?? 20),
+        req.user?.role === Roles.PHARMACIST
       );
 
       return res.status(200).json({

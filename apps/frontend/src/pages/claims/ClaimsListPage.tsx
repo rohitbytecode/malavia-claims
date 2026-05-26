@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useAuthStore } from "../../store/auth.store";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -27,6 +28,7 @@ export function ClaimsListPage() {
   const navigate = useNavigate();
 
   const [params, setParams] = useSearchParams();
+  const user = useAuthStore((s) => s.user);
 
   const [search, setSearch] = useState("");
 
@@ -260,7 +262,7 @@ export function ClaimsListPage() {
         </select>
       </section>
 
-      <ClaimCreatePanel />
+      {user?.role !== "PHARMACIST" && <ClaimCreatePanel />}
 
       <DataTable
         title="Claims operational registry"

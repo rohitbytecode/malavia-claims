@@ -20,6 +20,10 @@ import {
   accountantRoles,
   operationalRoles,
 } from "../constants/workflow";
+
+const nonPharmacyOperationalRoles = operationalRoles.filter(
+  (role) => role !== "PHARMACIST"
+);
 export function AppRoutes() {
   return (
     <Routes>
@@ -58,7 +62,7 @@ export function AppRoutes() {
       <Route
         path="/patients"
         element={
-          <ProtectedRoute roles={operationalRoles}>
+          <ProtectedRoute roles={nonPharmacyOperationalRoles}>
             <AppLayout>
               <PatientsPage />
             </AppLayout>

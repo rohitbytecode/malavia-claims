@@ -29,3 +29,24 @@ export const authenticate = (
     throw new AppError("Invalid or expired access token", 401);
   }
 };
+
+
+export const restrictTo = (...allowedRoles: Roles[]) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      throw new AppError("You do not have permission to perform this action", 403);
+    }
+
+    next();
+  };
+};
+
+export const excludeRoles = (...excludedRoles: Roles[]) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.user || excludedRoles.includes(req.user.role)) {
+      throw new AppError("You do not have permission to perform this action", 403);
+    }
+
+    next();
+  };
+};

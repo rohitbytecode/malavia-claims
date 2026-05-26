@@ -86,7 +86,8 @@ export class ReportService {
     year: number,
     month: number,
     endYear?: number,
-    endMonth?: number
+    endMonth?: number,
+    isPharmacist = false
   ) {
     const startDate = new Date(year, month - 1, 1);
     const endDate =
@@ -95,7 +96,7 @@ export class ReportService {
         : new Date(year, month, 0, 23, 59, 59, 999);
 
     const summary = await ClaimModel.aggregate([
-      { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
+      { $match: { createdAt: { $gte: startDate, $lte: endDate }, ...(isPharmacist ? { billBreakdown: { $elemMatch: { departmentCategory: "PHARMACY" } } } : {}) } },
       {
         $group: {
           _id: "$status",
@@ -106,7 +107,7 @@ export class ReportService {
     ]);
 
     const detailedClaims = await ClaimModel.aggregate([
-      { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
+      { $match: { createdAt: { $gte: startDate, $lte: endDate }, ...(isPharmacist ? { billBreakdown: { $elemMatch: { departmentCategory: "PHARMACY" } } } : {}) } },
 
       {
         $lookup: {
@@ -139,16 +140,34 @@ export class ReportService {
               "$patientId",
             ],
           },
-          patientPhone: { $ifNull: ["$patient.phone", "$patient.mobile"] },
-          gender: "$patient.gender",
-          age: "$patient.age",
+          patientPhone: isPharmacist
+            ? null
+            : { $ifNull: ["$patient.phone", "$patient.mobile"] },
+          gender: isPharmacist ? null : "$patient.gender",
+          age: isPharmacist ? null : "$patient.age",
 
           // Claim Fields
           type: "$type",
           status: "$status",
           doctorId: "$doctorId",
           departmentId: "$departmentId",
-          totalClaimAmount: { $ifNull: ["$totalClaimAmount", 0] },
+          totalClaimAmount: isPharmacist
+            ? {
+                $sum: {
+                  $map: {
+                    input: {
+                      $filter: {
+                        input: { $ifNull: ["$billBreakdown", []] },
+                        as: "item",
+                        cond: { $eq: ["$$item.departmentCategory", "PHARMACY"] },
+                      },
+                    },
+                    as: "pharmacyItem",
+                    in: { $ifNull: ["$$pharmacyItem.amount", 0] },
+                  },
+                },
+              }
+            : { $ifNull: ["$totalClaimAmount", 0] },
           depositAmount: "$depositAmount",
           approvedAmount: "$approvedAmount",
           settledAmount: "$settledAmount",
@@ -178,7 +197,8 @@ export class ReportService {
     year: number,
     month: number,
     endYear?: number,
-    endMonth?: number
+    endMonth?: number,
+    isPharmacist = false
   ) {
     const startDate = new Date(year, month - 1, 1);
     const endDate =
@@ -260,7 +280,8 @@ export class ReportService {
     year: number,
     month: number,
     endYear?: number,
-    endMonth?: number
+    endMonth?: number,
+    isPharmacist = false
   ) {
     const startDate = new Date(year, month - 1, 1);
     const endDate =

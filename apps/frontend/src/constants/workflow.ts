@@ -72,6 +72,7 @@ export function canRoleTransition(
   role: Role,
   nextStatus: ClaimStatus
 ): boolean {
+  if (role === "PHARMACIST") return false;
   if (nextStatus === "CLOSED") return managerRoles.includes(role);
   if (nextStatus === "SETTLED") return accountantRoles.includes(role);
   if (["FINAL_APPROVED", "FINAL_REJECTED"].includes(nextStatus))

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { ReportService } from "../service/report.service.js";
+import { Roles } from "@/core/enums/roles.enum.js";
 
 export class ReportController {
   static async getPatientClaimSummary(req: Request, res: Response) {
@@ -39,7 +40,8 @@ export class ReportController {
       Number(year),
       Number(month),
       endYear ? Number(endYear) : undefined,
-      endMonth ? Number(endMonth) : undefined
+      endMonth ? Number(endMonth) : undefined,
+      req.user?.role === Roles.PHARMACIST
     );
 
     return res.status(200).json({
@@ -63,7 +65,8 @@ export class ReportController {
       Number(year),
       Number(month),
       endYear ? Number(endYear) : undefined,
-      endMonth ? Number(endMonth) : undefined
+      endMonth ? Number(endMonth) : undefined,
+      req.user?.role === Roles.PHARMACIST
     );
 
     return res.status(200).json({
@@ -87,7 +90,8 @@ export class ReportController {
       Number(year),
       Number(month),
       endYear ? Number(endYear) : undefined,
-      endMonth ? Number(endMonth) : undefined
+      endMonth ? Number(endMonth) : undefined,
+      req.user?.role === Roles.PHARMACIST
     );
 
     return res.status(200).json({

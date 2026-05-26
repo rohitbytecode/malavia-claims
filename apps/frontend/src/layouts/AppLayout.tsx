@@ -144,7 +144,7 @@ const NAV_ITEMS: {
     to: "/patients",
     label: "Patients",
     icon: "users",
-    roles: operationalRoles,
+    roles: nonPharmacyOperationalRoles,
     group: "operations",
   },
   {
