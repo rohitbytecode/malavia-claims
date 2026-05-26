@@ -74,6 +74,21 @@ export class DashboardService {
     const totalSettledAmount =
       totalSettledResult.length > 0 ? totalSettledResult[0].total : 0;
 
+    // Pharmacy settled amount
+    const pharmacySettledResult = await SettlementModel.aggregate([
+      { $match: { settlementDate: { $gte: startOfYear, $lte: endOfYear } } },
+      { $unwind: "$departmentBreakdown" },
+      { $match: { "departmentBreakdown.departmentCategory": "PHARMACY" } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$departmentBreakdown.netAmount" },
+        },
+      },
+    ]);
+    const pharmacySettledAmount =
+      pharmacySettledResult.length > 0 ? pharmacySettledResult[0].total : 0;
+
     // 6. Claims by Status
     const claimsByStatus = await ClaimModel.aggregate([
       { $group: { _id: "$status", count: { $sum: 1 } } },
@@ -113,6 +128,7 @@ export class DashboardService {
       activeAlertsCount,
       financials: {
         totalSettledAmount,
+        pharmacySettledAmount,
         year: currentYear,
       },
       claimsByStatus: claimsByStatus.map((s) => ({

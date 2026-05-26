@@ -257,6 +257,8 @@ export const roleExperiences: Record<Role, RoleExperience> = {
     mission:
       "Track pharmacy department billing, verify approved shares, and coordinate Pharmacy vendor payouts.",
     primaryQueues: [
+      "PREAUTH_PENDING",
+      "PREAUTH_APPROVED",
       "SETTLEMENT_PENDING",
       "SETTLED",
     ],

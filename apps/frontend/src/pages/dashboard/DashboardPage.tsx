@@ -39,6 +39,21 @@ export function DashboardPage() {
     return <ErrorPanel error={new Error("Dashboard metrics unavailable")} />;
 
   const data = metrics.data;
+
+  const pharmacistStatuses = [
+    "PREAUTH_PENDING",
+    "PREAUTH_APPROVED",
+    "SETTLEMENT_PENDING",
+    "SETTLED",
+  ];
+
+  const visibleStatuses =
+    user?.role === "PHARMACIST"
+      ? data.claimsByStatus.filter((row) =>
+          pharmacistStatuses.includes(row.status)
+        )
+      : data.claimsByStatus;
+
   const insurerWaiting = data.claimsByStatus
     .filter((row) => insurerWaitingStatuses.includes(row.status))
     .reduce((sum, row) => sum + row.count, 0);
@@ -77,9 +92,19 @@ export function DashboardPage() {
             <strong>{urgentAgeing}</strong>
           </div>
           <div>
-            <span>Settled value ({data.financials.year})</span>
+            <span>
+              Settled value (
+              {user?.role === "PHARMACIST"
+                ? `${data.financials.year} pharmacy`
+                : data.financials.year}
+              )
+            </span>
             <strong>
-              {formatCurrency(data.financials.totalSettledAmount)}
+              {formatCurrency(
+                user?.role === "PHARMACIST"
+                  ? data.financials.pharmacySettledAmount
+                  : data.financials.totalSettledAmount
+              )}
             </strong>
           </div>
         </div>
@@ -102,7 +127,7 @@ export function DashboardPage() {
             eyebrow="Status distribution from claims module"
           />
           <div className="status-orbit-grid">
-            {data.claimsByStatus.map((row) => (
+            {visibleStatuses.map((row) => (
               <Link
                 className={
                   roleHotStatuses.includes(row.status)

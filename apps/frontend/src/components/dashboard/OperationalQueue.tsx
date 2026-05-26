@@ -12,6 +12,11 @@ export function OperationalQueue({
   role?: Role;
 }) {
   const experience = role ? roleExperiences[role] : undefined;
+  const pharmacistRows = [
+    "Preauth awaiting insurer",
+    "Settlement desk pending",
+  ];
+
   const rows: {
     label: string;
     status?: ClaimStatus;
@@ -56,6 +61,11 @@ export function OperationalQueue({
     },
   ];
 
+  const visibleRows =
+    role === "PHARMACIST"
+      ? rows.filter((row) => pharmacistRows.includes(row.label))
+      : rows;
+
   return (
     <section className="ops-queue premium-panel">
       <div className="panel-title-row">
@@ -71,7 +81,7 @@ export function OperationalQueue({
         </div>
       </div>
       <div className="queue-grid">
-        {rows.map((row) => {
+        {visibleRows.map((row) => {
           const highlighted = Boolean(
             row.status && experience?.primaryQueues.includes(row.status)
           );

@@ -13,6 +13,7 @@ export function AlertPlaybookPanel({
   const sorted = alerts.toSorted(
     (a, b) => severityRank[b.severity] - severityRank[a.severity]
   );
+  if (role === "PHARMACIST") return null;
 
   return (
     <section className="playbook-panel premium-panel">
