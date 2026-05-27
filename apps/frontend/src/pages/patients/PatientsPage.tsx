@@ -12,6 +12,7 @@ import {
   TextInput,
 } from "../../components/forms/FormField";
 import type { Patient } from "../../types/domain";
+import { useAuthStore } from "../../store/auth.store";
 
 type PatientDraft = {
   patientId: string;
@@ -34,6 +35,9 @@ export function PatientsPage() {
   const [editing, setEditing] = useState<Patient | null>(null);
   const [draft, setDraft] = useState<PatientDraft>(blank);
   const qc = useQueryClient();
+
+  const user = useAuthStore((s) => s.user);
+  const isPharmacist = user?.role === "PHARMACIST";
 
   const patientsQuery = useQuery({
     queryKey: ["patients"],
@@ -152,26 +156,29 @@ export function PatientsPage() {
     },
     {
       key: "actions",
-      header: "Actions",
+      header: isPharmacist ? "" : "Actions",
       cell: (p) => (
         <div className="chip-cloud">
-          <Button type="button" variant="secondary" onClick={() => openEdit(p)}>
-            Edit
-          </Button>
-
-          <Button
-            type="button"
-            variant={p.isActive ? "danger" : "success"}
-            onClick={() =>
-              toggleStatus.mutate({
-                id: p._id,
-                isActive: !p.isActive,
-              })
-            }
-            disabled={toggleStatus.isPending}
-          >
-            {p.isActive ? "Inactivate" : "Activate"}
-          </Button>
+          {!isPharmacist && (
+            <Button type="button" variant="secondary" onClick={() => openEdit(p)}>
+              Edit
+            </Button>
+          )}
+          {!isPharmacist && (
+            <Button
+              type="button"
+              variant={p.isActive ? "danger" : "success"}
+              onClick={() =>
+                toggleStatus.mutate({
+                  id: p._id,
+                  isActive: !p.isActive,
+                })
+              }
+              disabled={toggleStatus.isPending}
+            >
+              {p.isActive ? "Inactivate" : "Activate"}
+            </Button>
+          )}
         </div>
       ),
     },
@@ -200,9 +207,11 @@ export function PatientsPage() {
         columns={columns}
         getRowId={(row) => row._id}
         actions={
-          <Button type="button" onClick={openCreate}>
-            New patient
-          </Button>
+          !isPharmacist && (
+            <Button type="button" onClick={openCreate}>
+              New patient
+            </Button>
+          )
         }
       />
 

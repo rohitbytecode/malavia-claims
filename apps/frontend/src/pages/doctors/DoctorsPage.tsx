@@ -12,6 +12,7 @@ import {
   TextInput,
 } from "../../components/forms/FormField";
 import type { Doctor } from "../../types/domain";
+import { useAuthStore } from "../../store/auth.store";
 
 type DoctorDraft = {
   name: string;
@@ -32,6 +33,9 @@ export function DoctorsPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const qc = useQueryClient();
 
+  const user = useAuthStore((s) => s.user);
+  const isPharmacist = user?.role === "PHARMACIST";
+  
   const doctorsQuery = useQuery({
     queryKey: ["doctors"],
     queryFn: () => doctorApi.list({ limit: 100 }),
@@ -146,13 +150,15 @@ export function DoctorsPage() {
     },
     {
       key: "actions",
-      header: "Actions",
+      header: isPharmacist ? "" : "Actions",
       cell: (d) => (
         <div className="chip-cloud">
+          {!isPharmacist && (
           <Button type="button" variant="secondary" onClick={() => openEdit(d)}>
             Edit
           </Button>
-
+          )}
+          {!isPharmacist && (
           <Button
             type="button"
             variant={d.isActive ? "danger" : "success"}
@@ -166,6 +172,7 @@ export function DoctorsPage() {
           >
             {d.isActive ? "Deactivate" : "Activate"}
           </Button>
+          )}
         </div>
       ),
     },
@@ -191,9 +198,11 @@ export function DoctorsPage() {
         columns={columns}
         getRowId={(row) => row._id || row.id}
         actions={
-          <Button type="button" onClick={openCreate}>
-            New doctor
-          </Button>
+          !isPharmacist && (
+            <Button type="button" onClick={openCreate}>
+              New doctor
+            </Button>
+          )
         }
       />
 
