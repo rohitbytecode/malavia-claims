@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/auth.store";
 
 import { claimsApi, patientApi } from "../../api/services";
 
@@ -22,6 +23,8 @@ import {
 
 export function AllClaimsPage() {
   const navigate = useNavigate();
+
+  const user = useAuthStore((s) => s.user);
 
   const query = useQuery({
     queryKey: ["all-claims"],
@@ -81,9 +84,25 @@ export function AllClaimsPage() {
     },
     {
       key: "amount",
-      header: "Claim Amount",
-      cell: (c) => formatCurrency(c.totalClaimAmount),
-      sortValue: (c) => c.totalClaimAmount,
+      header: user?.role === "PHARMACIST" ? "Pharmacy Amount": "Claim Amount",
+      cell: (c) =>{
+        if (user?.role === "PHARMACIST") {
+          const pharmacyItem = c.billBreakdown?.find(
+            (b) => b.departmentCategory === "PHARMACY"
+          );
+          return formatCurrency(pharmacyItem?.amount ?? 0);
+        }
+        return formatCurrency(c.totalClaimAmount);
+      },
+      sortValue: (c) => {
+        if (user?.role === "PHARMACIST") {
+          return (
+            c.billBreakdown?.find((b) => b.departmentCategory === "PHARMACY")
+              ?.amount ?? 0
+          );
+        }
+        return c.totalClaimAmount;
+      },
       className: "numeric",
     },
     {
