@@ -117,7 +117,18 @@ export function ClaimDetailsPage() {
           </div>
           <div className="cockpit-hero-status">
             <StatusBadge value={data.status} />
+            {user?.role === "PHARMACIST" ?(
+              (() => {
+                const pharmacyItem = data.billBreakdown?.find(
+                  (b) => b.departmentCategory === "PHARMACY"
+                );
+                return pharmacyItem
+                ? <strong>{formatCurrency(pharmacyItem.amount)}</strong>
+                : <span style={{ fontSize: 13, color: "var(--text-muted, #888)" }}>Pharmacy amount not configured</span>;
+              })()
+              ) :(
             <strong>{formatCurrency(data.totalClaimAmount)}</strong>
+              )}
           </div>
         </section>
 
@@ -209,11 +220,12 @@ export function ClaimDetailsPage() {
               </div>
             )}
 
-            <WorkflowRail claim={data} />
+            <WorkflowRail claim={data} isPharmacist={user?.role === "PHARMACIST"} />
             <FinancialControlDeck
               claim={data}
               settlement={settlement.data}
               deposit={deposit.data}
+              isPharmacist={user?.role === "PHARMACIST"}
             />
 
             {/* Separated Finance Console CTA Summary Card */}

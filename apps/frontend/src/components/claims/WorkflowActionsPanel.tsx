@@ -32,6 +32,7 @@ const RISK_COLORS: Record<string, string> = {
 
 export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
   const user = useAuthStore((s) => s.user);
+  const isPharmacist = user?.role === "PHARMACIST";
   const qc = useQueryClient();
   const [target, setTarget] = useState<ClaimStatus | undefined>();
   const [remarks, setRemarks] = useState("");
@@ -75,6 +76,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
   }, [historyQuery.data]);
 
   const transitions = useMemo(() => {
+    if (user?.role === "PHARMACIST") return [];
     let allowed = allowedTransitions(claim.type, claim.status);
     if (claim.status === "RECONSIDERATION_PENDING") {
       if (lastRejectionStatus === "PREAUTH_REJECTED") {
@@ -266,6 +268,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
         )}
 
         {/* Guardrails */}
+        {!isPharmacist && (
         <div className="action-panel__guardrails">
           <p className="action-panel__section-label">System Guardrails</p>
           <ul>
@@ -275,6 +278,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
             <li>All actions are logged to the immutable audit trail</li>
           </ul>
         </div>
+        )}
       </div>
 
       {/* Confirmation modal */}

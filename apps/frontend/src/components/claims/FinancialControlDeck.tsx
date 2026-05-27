@@ -6,10 +6,12 @@ export function FinancialControlDeck({
   claim,
   settlement,
   deposit,
+  isPharmacist,
 }: {
   claim: Claim;
   settlement?: Settlement | null;
   deposit?: Deposit | null;
+  isPharmacist: boolean;
 }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
 
@@ -22,6 +24,15 @@ export function FinancialControlDeck({
         (claim.tdsAmount ?? 0) -
         (claim.hospitalDiscount ?? 0)
     );
+
+  const pharmacyBreakdown = claim.billBreakdown?.find(
+    (b) => b.departmentCategory === "PHARMACY"
+  );
+  const pharmacySettlement = settlement?.departmentBreakdown?.find(
+    (b) => b.departmentCategory === "PHARMACY"
+  );
+  const pharmacyGross = pharmacySettlement?.approvedAmount ?? pharmacyBreakdown?.amount ?? null;
+  const pharmacyNet = pharmacySettlement?.netAmount ?? null;
 
   const hasRefundRisk = deposit
     ? (deposit.refundAmount ?? 0) > (deposit.collectedAmount ?? 0)
@@ -42,71 +53,93 @@ export function FinancialControlDeck({
           <h2>Settlement · TDS · Deductions · Refunds</h2>
         </div>
         <div className="net-payable" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-          <span className="net-label">Net Payable (Before TDS)</span>
-          <strong style={{ fontSize: 18 }}>
-            {formatCurrency(netPayable + (settlement?.tds ?? claim.tdsAmount ?? 0))}
-          </strong>
-          <span className="net-label" style={{ fontSize: 10, marginTop: 4 }}>Net Payable (After TDS)</span>
-          <strong style={{ fontSize: 14, opacity: 0.9 }}>
-            {formatCurrency(netPayable)}
-          </strong>
-        </div>
+  {isPharmacist ? (
+    <>
+      <span className="net-label">Pharmacy Amount (Before TDS)</span>
+      <strong style={{ fontSize: 18 }}>
+        {pharmacyGross !== null ? formatCurrency(pharmacyGross) : "Not configured"}
+      </strong>
+      <span className="net-label" style={{ fontSize: 10, marginTop: 4 }}>Pharmacy Amount (After TDS)</span>
+      <strong style={{ fontSize: 14, opacity: 0.9 }}>
+        {pharmacyNet !== null ? formatCurrency(pharmacyNet) : "Not configured"}
+      </strong>
+    </>
+  ) : (
+    <>
+      <span className="net-label">Net Payable (Before TDS)</span>
+      <strong style={{ fontSize: 18 }}>
+        {formatCurrency(netPayable + (settlement?.tds ?? claim.tdsAmount ?? 0))}
+      </strong>
+      <span className="net-label" style={{ fontSize: 10, marginTop: 4 }}>Net Payable (After TDS)</span>
+      <strong style={{ fontSize: 14, opacity: 0.9 }}>
+        {formatCurrency(netPayable)}
+      </strong>
+    </>
+  )}
+</div>
       </div>
 
       <div className="finance-grid">
-        <div className="finance-item">
-          <span>Claimed amount</span>
-          <strong>{formatCurrency(claim.totalClaimAmount)}</strong>
-        </div>
-        <div className="finance-item">
-          <span>TDS</span>
-          <strong>
-            {formatCurrency(settlement?.tds ?? claim.tdsAmount ?? 0)}
-          </strong>
-        </div>
-        <div className="finance-item">
-          <span>Deductions</span>
-          <strong>
-            {formatCurrency(settlement?.deductions ?? claim.deductions ?? 0)}
-          </strong>
-        </div>
-        <div className="finance-item">
-          <span>Hospital discount</span>
-          <strong>
-            {formatCurrency(
-              settlement?.hospitalDiscount ?? claim.hospitalDiscount ?? 0
-            )}
-          </strong>
-        </div>
-
-        <div className="finance-item">
-          <span>Settlement method</span>
-          <strong>{labelize(settlement?.settlementMethod) || "—"}</strong>
-        </div>
-        <div className="finance-item">
-          <span>Settlement date</span>
-          <strong>
-            {settlement?.settlementDate
-              ? formatDateTime(settlement.settlementDate)
-              : "—"}
-          </strong>
-        </div>
-
-        <div className={`finance-item ${hasRefundRisk ? "risk" : ""}`}>
-          <span>Collected deposit</span>
-          <strong>
-            {formatCurrency(
-              deposit?.collectedAmount ?? claim.depositAmount ?? 0
-            )}
-          </strong>
-        </div>
-        <div className={`finance-item ${hasRefundRisk ? "risk" : ""}`}>
-          <span>Refund amount</span>
-          <strong>
-            {formatCurrency(deposit?.refundAmount ?? claim.refundAmount ?? 0)}
-          </strong>
-        </div>
+  {isPharmacist ? (
+    <>
+      <div className="finance-item">
+        <span>Pharmacy claimed</span>
+        <strong>{pharmacyBreakdown ? formatCurrency(pharmacyBreakdown.amount) : "—"}</strong>
       </div>
+      <div className="finance-item">
+        <span>Pharmacy approved</span>
+        <strong>{pharmacySettlement ? formatCurrency(pharmacySettlement.approvedAmount) : "—"}</strong>
+      </div>
+      <div className="finance-item">
+  <span>Pharmacy deductions</span>
+  <strong>
+    {(pharmacySettlement?.deduction ?? 0) > 0
+      ? `-${formatCurrency(pharmacySettlement!.deduction)}`
+      : "—"}
+  </strong>
+</div>
+      <div className="finance-item">
+        <span>Pharmacy net payout</span>
+        <strong>{pharmacySettlement ? formatCurrency(pharmacySettlement.netAmount) : "—"}</strong>
+      </div>
+    </>
+  ) : (
+    <>
+      <div className="finance-item">
+        <span>Claimed amount</span>
+        <strong>{formatCurrency(claim.totalClaimAmount)}</strong>
+      </div>
+      <div className="finance-item">
+        <span>TDS</span>
+        <strong>{formatCurrency(settlement?.tds ?? claim.tdsAmount ?? 0)}</strong>
+      </div>
+      <div className="finance-item">
+        <span>Deductions</span>
+        <strong>{formatCurrency(settlement?.deductions ?? claim.deductions ?? 0)}</strong>
+      </div>
+      <div className="finance-item">
+        <span>Hospital discount</span>
+        <strong>{formatCurrency(settlement?.hospitalDiscount ?? claim.hospitalDiscount ?? 0)}</strong>
+      </div>
+      <div className="finance-item">
+        <span>Settlement method</span>
+        <strong>{labelize(settlement?.settlementMethod) || "—"}</strong>
+      </div>
+      <div className="finance-item">
+        <span>Settlement date</span>
+        <strong>{settlement?.settlementDate ? formatDateTime(settlement.settlementDate) : "—"}</strong>
+      </div>
+      <div className={`finance-item ${hasRefundRisk ? "risk" : ""}`}>
+        <span>Collected deposit</span>
+        <strong>{formatCurrency(deposit?.collectedAmount ?? claim.depositAmount ?? 0)}</strong>
+      </div>
+      <div className={`finance-item ${hasRefundRisk ? "risk" : ""}`}>
+        <span>Refund amount</span>
+        <strong>{formatCurrency(deposit?.refundAmount ?? claim.refundAmount ?? 0)}</strong>
+      </div>
+    </>
+  )}
+</div>
 
       {(hasSettlementBreakdown || hasClaimBreakdown) && (
         <div
@@ -290,11 +323,12 @@ export function FinancialControlDeck({
           )}
         </div>
       )}
-
-      <p className="validation-note">
-        All calculations follow system rules. Refunds cannot exceed collected
-        deposits.
-      </p>
+      {!isPharmacist && (
+        <p className="validation-note">
+          All calculations follow system rules. Refunds cannot exceed collected
+          deposits.
+        </p>
+      )}
     </section>
   );
 }

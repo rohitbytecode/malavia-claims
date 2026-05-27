@@ -6,10 +6,22 @@ import { StatusBadge } from "../ui/StatusBadge";
 
 interface WorkflowRailProps {
   claim: Claim;
+  isPharmacist?: boolean;
 }
+const PHARMACIST_STATUSES =[
+  "PREAUTH_PENDING",
+  "PREAUTH_APPROVED",
+  "SETTLEMENT_PENDING",
+  "SETTLED",
+];
 
-export function WorkflowRail({ claim }: WorkflowRailProps) {
-  const stages = getWorkflowStages(claim.type);
+export function WorkflowRail({ claim, isPharmacist }: WorkflowRailProps) {
+  const stages = useMemo(() => {
+  const all = getWorkflowStages(claim.type);
+  if (!isPharmacist) return all;
+  return all.filter((s) => PHARMACIST_STATUSES.includes(s.id));
+}, [claim.type, isPharmacist]);
+
   const currentIndex = stages.findIndex((s) => s.id === claim.status);
   const nextStatuses = allowedTransitions(claim.type, claim.status);
   const isClosed = claim.status === "CLOSED";
@@ -136,6 +148,7 @@ export function WorkflowRail({ claim }: WorkflowRailProps) {
       </div>
 
       {/* Next transitions */}
+      {!isPharmacist && (
       <div className="workflow-rail__next">
         <span className="workflow-rail__next-label">
           System-allowed transitions
@@ -152,6 +165,7 @@ export function WorkflowRail({ claim }: WorkflowRailProps) {
           )}
         </div>
       </div>
+      )}
     </section>
   );
 }
