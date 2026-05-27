@@ -320,9 +320,21 @@ export function ReportsPage() {
     if (!appliedSearchTerm) return claims;
     const term = appliedSearchTerm.toLowerCase().trim();
     return claims.filter((claim: DetailedClaim) => {
-      const pName = (patientMap.get(claim.patientId) || claim.patientName || "").toLowerCase();
-      const dName = (doctorMap.get(claim.doctorId) || (typeof claim.doctor === "object" && claim.doctor?.name) || "").toLowerCase();
-      const deptName = (departmentMap.get(claim.departmentId) || (typeof claim.department === "object" && claim.department?.name) || "").toLowerCase();
+      const pName = (
+        patientMap.get(claim.patientId) ||
+        claim.patientName ||
+        ""
+      ).toLowerCase();
+      const dName = (
+        doctorMap.get(claim.doctorId) ||
+        (typeof claim.doctor === "object" && claim.doctor?.name) ||
+        ""
+      ).toLowerCase();
+      const deptName = (
+        departmentMap.get(claim.departmentId) ||
+        (typeof claim.department === "object" && claim.department?.name) ||
+        ""
+      ).toLowerCase();
       return (
         claim.claimNumber?.toLowerCase().includes(term) ||
         claim.claimId?.toLowerCase().includes(term) ||
@@ -334,7 +346,13 @@ export function ReportsPage() {
         claim.status?.toLowerCase().includes(term)
       );
     });
-  }, [monthlyData?.detailedClaims, appliedSearchTerm, patientMap, doctorMap, departmentMap]);
+  }, [
+    monthlyData?.detailedClaims,
+    appliedSearchTerm,
+    patientMap,
+    doctorMap,
+    departmentMap,
+  ]);
 
   const summary = useMemo<ReportSummaryRow[]>(() => {
     if (!appliedSearchTerm) {
@@ -363,7 +381,10 @@ export function ReportsPage() {
   }, [detailedClaims]);
 
   const totalAmount = useMemo<number>(() => {
-    return detailedClaims.reduce((sum: number, r: DetailedClaim) => sum + (r.totalClaimAmount ?? 0), 0);
+    return detailedClaims.reduce(
+      (sum: number, r: DetailedClaim) => sum + (r.totalClaimAmount ?? 0),
+      0
+    );
   }, [detailedClaims]);
 
   const sData = settlementReport.data;
@@ -450,28 +471,29 @@ export function ReportsPage() {
     const list = insurance.data || [];
     if (!appliedSearchTerm) return list;
     const term = appliedSearchTerm.toLowerCase().trim();
-    return list.filter((row) =>
-      row.companyName?.toLowerCase().includes(term)
-    );
+    return list.filter((row) => row.companyName?.toLowerCase().includes(term));
   }, [insurance.data, appliedSearchTerm]);
 
   const departmentReportData = useMemo(() => {
     const list = filteredSettlements;
-    const groupsMap = new Map<string, {
-      departmentId: string;
-      departmentName: string;
-      rows: any[];
-      totals: {
-        approvedAmount: number;
-        deductions: number;
-        tds: number;
-        pharmacy: number;
-        lab: number;
-        radiology: number;
-        others: number;
-        netPayable: number;
-      };
-    }>();
+    const groupsMap = new Map<
+      string,
+      {
+        departmentId: string;
+        departmentName: string;
+        rows: any[];
+        totals: {
+          approvedAmount: number;
+          deductions: number;
+          tds: number;
+          pharmacy: number;
+          lab: number;
+          radiology: number;
+          others: number;
+          netPayable: number;
+        };
+      }
+    >();
 
     for (const s of list) {
       const deptId = s.departmentId || "unknown";
@@ -539,7 +561,9 @@ export function ReportsPage() {
       group.totals.netPayable += s.netPayable || 0;
     }
 
-    const groups = Array.from(groupsMap.values()).sort((a, b) => a.departmentName.localeCompare(b.departmentName));
+    const groups = Array.from(groupsMap.values()).sort((a, b) =>
+      a.departmentName.localeCompare(b.departmentName)
+    );
 
     const grandTotals = groups.reduce(
       (acc: any, g: any) => {
@@ -686,32 +710,493 @@ export function ReportsPage() {
   const activeTabLabel =
     REPORT_TABS.find((t) => t.id === activeTab)?.label ?? "";
 
-    if (isPharmacist) {
-  return (
-    <div className="page-stack">
-      <div className="page-title">
-        <p className="eyebrow">Audit-ready reporting</p>
-        <h1>Reports &amp; PDF Preview</h1>
+  if (isPharmacist) {
+    return (
+      <div className="page-stack">
+        <div className="page-title">
+          <p className="eyebrow">Audit-ready reporting</p>
+          <h1>Reports &amp; PDF Preview</h1>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "32px 16px",
+          }}
+        >
+          <svg
+            width="100%"
+            viewBox="0 0 680 420"
+            role="img"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ maxWidth: 680 }}
+          >
+            <title>Under construction</title>
+            <desc>
+              Animated under construction banner for the Reports &amp; PDF
+              Preview section
+            </desc>
+            <defs>
+              <style>{`
+            .crane-arm { transform-origin: 220px 80px; animation: swing 3s ease-in-out infinite; }
+            @keyframes swing { 0%,100%{transform:rotate(-4deg)} 50%{transform:rotate(4deg)} }
+            .hook { animation: hookbob 3s ease-in-out infinite; }
+            @keyframes hookbob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+            .gear1 { transform-origin: 420px 210px; animation: spin1 4s linear infinite; }
+            @keyframes spin1 { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+            .gear2 { transform-origin: 456px 210px; animation: spin2 4s linear infinite; }
+            @keyframes spin2 { from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
+            .blink { animation: blink 1.2s step-end infinite; }
+            @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+            .progress-fill { animation: progress 2.8s ease-in-out infinite; }
+            @keyframes progress { 0%{width:28px} 50%{width:280px} 100%{width:28px} }
+            .hard-hat { animation: hatbob 3s ease-in-out infinite; transform-origin: 340px 195px; }
+            @keyframes hatbob { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-5px) rotate(-3deg)} }
+            .stripe { animation: stripeMove 1s linear infinite; }
+            @keyframes stripeMove { from{transform:translateX(0)} to{transform:translateX(20px)} }
+            .wrench { transform-origin: 570px 260px; animation: wrench 2s ease-in-out infinite; }
+            @keyframes wrench { 0%,100%{transform:rotate(-20deg)} 50%{transform:rotate(20deg)} }
+          `}</style>
+            </defs>
+
+            {/* Background dots */}
+            <defs>
+              <pattern
+                id="dots"
+                x="0"
+                y="0"
+                width="24"
+                height="24"
+                patternUnits="userSpaceOnUse"
+              >
+                <circle cx="12" cy="12" r="1.5" fill="#888" />
+              </pattern>
+            </defs>
+            <rect width="680" height="420" fill="url(#dots)" opacity="0.06" />
+
+            {/* Caution stripe — top */}
+            <clipPath id="stripe-clip-top">
+              <rect x="0" y="0" width="680" height="14" />
+            </clipPath>
+            <g clipPath="url(#stripe-clip-top)">
+              <g className="stripe">
+                <rect
+                  x="-20"
+                  y="0"
+                  width="720"
+                  height="14"
+                  fill="#FAC775"
+                  opacity="0.9"
+                />
+                {Array.from({ length: 37 }, (_, i) => (
+                  <polygon
+                    key={i}
+                    points={`${-20 + i * 20},0 ${i * 20},0 ${-20 + i * 20},14 ${(i - 1) * 20},14`}
+                    fill="#2C2C2A"
+                    opacity="0.55"
+                  />
+                ))}
+              </g>
+            </g>
+
+            {/* Caution stripe — bottom */}
+            <clipPath id="stripe-clip-bot">
+              <rect x="0" y="406" width="680" height="14" />
+            </clipPath>
+            <g clipPath="url(#stripe-clip-bot)">
+              <g className="stripe">
+                <rect
+                  x="-20"
+                  y="406"
+                  width="720"
+                  height="14"
+                  fill="#FAC775"
+                  opacity="0.9"
+                />
+                {Array.from({ length: 37 }, (_, i) => (
+                  <polygon
+                    key={i}
+                    points={`${-20 + i * 20},406 ${i * 20},406 ${-20 + i * 20},420 ${(i - 1) * 20},420`}
+                    fill="#2C2C2A"
+                    opacity="0.55"
+                  />
+                ))}
+              </g>
+            </g>
+
+            {/* Crane tower */}
+            <rect
+              x="196"
+              y="70"
+              width="16"
+              height="200"
+              rx="2"
+              fill="#888"
+              opacity="0.25"
+            />
+
+            {/* Crane arm */}
+            <g className="crane-arm">
+              <rect
+                x="148"
+                y="66"
+                width="140"
+                height="10"
+                rx="3"
+                fill="#FAC775"
+                opacity="0.9"
+              />
+              <rect
+                x="148"
+                y="62"
+                width="36"
+                height="18"
+                rx="3"
+                fill="#BA7517"
+                opacity="0.85"
+              />
+              <line
+                x1="276"
+                y1="76"
+                x2="276"
+                y2="115"
+                stroke="#888"
+                strokeWidth="1.5"
+                opacity="0.6"
+              />
+              <g className="hook">
+                <line
+                  x1="272"
+                  y1="115"
+                  x2="272"
+                  y2="135"
+                  stroke="#888"
+                  strokeWidth="1.5"
+                  opacity="0.6"
+                />
+                <path
+                  d="M266 135 Q260 145 266 150 Q272 155 276 148"
+                  fill="none"
+                  stroke="#BA7517"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <rect
+                  x="258"
+                  y="154"
+                  width="32"
+                  height="40"
+                  rx="3"
+                  fill="#E6F1FB"
+                  stroke="#378ADD"
+                  strokeWidth="1"
+                />
+                <line
+                  x1="258"
+                  y1="162"
+                  x2="290"
+                  y2="162"
+                  stroke="#85B7EB"
+                  strokeWidth="1"
+                />
+                <line
+                  x1="258"
+                  y1="169"
+                  x2="290"
+                  y2="169"
+                  stroke="#85B7EB"
+                  strokeWidth="1"
+                />
+                <line
+                  x1="258"
+                  y1="176"
+                  x2="280"
+                  y2="176"
+                  stroke="#85B7EB"
+                  strokeWidth="1"
+                />
+                <text
+                  x="274"
+                  y="152"
+                  textAnchor="middle"
+                  fill="#185FA5"
+                  fontSize="9"
+                  fontWeight="500"
+                >
+                  PDF
+                </text>
+              </g>
+            </g>
+
+            {/* Hard hat */}
+            <g className="hard-hat">
+              <ellipse
+                cx="340"
+                cy="200"
+                rx="36"
+                ry="10"
+                fill="#FAC775"
+                opacity="0.95"
+              />
+              <path
+                d="M304 200 Q304 178 340 175 Q376 178 376 200 Z"
+                fill="#FAC775"
+                opacity="0.95"
+              />
+              <rect
+                x="308"
+                y="193"
+                width="64"
+                height="8"
+                rx="2"
+                fill="#BA7517"
+                opacity="0.8"
+              />
+              <rect
+                x="328"
+                y="175"
+                width="24"
+                height="8"
+                rx="2"
+                fill="#EF9F27"
+                opacity="0.7"
+              />
+            </g>
+
+            {/* Label card */}
+            <rect
+              x="140"
+              y="230"
+              width="400"
+              height="60"
+              rx="10"
+              fill="#f5f5f4"
+              opacity="0.85"
+            />
+            <rect
+              x="140"
+              y="230"
+              width="400"
+              height="60"
+              rx="10"
+              fill="none"
+              stroke="#d0cfc9"
+              strokeWidth="0.5"
+            />
+            <text
+              x="340"
+              y="257"
+              textAnchor="middle"
+              fontSize="15"
+              fontWeight="500"
+              fill="#1a1a18"
+            >
+              Reports &amp; PDF
+            </text>
+            <text
+              x="340"
+              y="278"
+              textAnchor="middle"
+              fontSize="12"
+              fill="#888780"
+            >
+              Under construction — coming soon for pharmacy
+            </text>
+
+            {/* Blinking dot */}
+            <circle cx="178" cy="261" r="5" fill="#EF9F27" className="blink" />
+
+            {/* Progress bar */}
+            <rect
+              x="194"
+              y="300"
+              width="292"
+              height="8"
+              rx="4"
+              fill="#e8e6e0"
+              stroke="#d0cfc9"
+              strokeWidth="0.5"
+            />
+            <clipPath id="pb-clip">
+              <rect x="194" y="300" width="292" height="8" rx="4" />
+            </clipPath>
+            <g clipPath="url(#pb-clip)">
+              <rect
+                x="194"
+                y="300"
+                height="8"
+                rx="4"
+                fill="#EF9F27"
+                className="progress-fill"
+              />
+            </g>
+            <text
+              x="340"
+              y="324"
+              textAnchor="middle"
+              fontSize="11"
+              fill="#888780"
+            >
+              Building something great...
+            </text>
+
+            {/* Gear 1 */}
+            <g className="gear1">
+              <circle
+                cx="420"
+                cy="210"
+                r="14"
+                fill="#f0ede6"
+                stroke="#888780"
+                strokeWidth="2"
+                opacity="0.7"
+              />
+              <circle cx="420" cy="210" r="4" fill="#888780" opacity="0.5" />
+              <g
+                stroke="#888780"
+                strokeWidth="3"
+                strokeLinecap="round"
+                opacity="0.6"
+              >
+                <line x1="420" y1="192" x2="420" y2="186" />
+                <line x1="420" y1="228" x2="420" y2="234" />
+                <line x1="402" y1="210" x2="396" y2="210" />
+                <line x1="438" y1="210" x2="444" y2="210" />
+                <line x1="407.3" y1="197.3" x2="403.1" y2="193.1" />
+                <line x1="432.7" y1="222.7" x2="436.9" y2="226.9" />
+                <line x1="432.7" y1="197.3" x2="436.9" y2="193.1" />
+                <line x1="407.3" y1="222.7" x2="403.1" y2="226.9" />
+              </g>
+            </g>
+
+            {/* Gear 2 */}
+            <g className="gear2">
+              <circle
+                cx="452"
+                cy="232"
+                r="12"
+                fill="#f0ede6"
+                stroke="#B4B2A9"
+                strokeWidth="2"
+                opacity="0.7"
+              />
+              <circle cx="452" cy="232" r="3" fill="#B4B2A9" opacity="0.5" />
+              <g
+                stroke="#B4B2A9"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                opacity="0.6"
+              >
+                <line x1="452" y1="218" x2="452" y2="214" />
+                <line x1="452" y1="246" x2="452" y2="250" />
+                <line x1="438" y1="232" x2="434" y2="232" />
+                <line x1="466" y1="232" x2="470" y2="232" />
+                <line x1="442.6" y1="222.6" x2="439.7" y2="219.7" />
+                <line x1="461.4" y1="241.4" x2="464.3" y2="244.3" />
+                <line x1="461.4" y1="222.6" x2="464.3" y2="219.7" />
+                <line x1="442.6" y1="241.4" x2="439.7" y2="244.3" />
+              </g>
+            </g>
+
+            {/* Wrench */}
+            <g className="wrench">
+              <rect
+                x="560"
+                y="240"
+                width="10"
+                height="40"
+                rx="3"
+                fill="#B4B2A9"
+                opacity="0.7"
+              />
+              <rect
+                x="554"
+                y="238"
+                width="22"
+                height="10"
+                rx="3"
+                fill="#888780"
+                opacity="0.8"
+              />
+              <rect
+                x="558"
+                y="276"
+                width="14"
+                height="10"
+                rx="3"
+                fill="#888780"
+                opacity="0.8"
+              />
+            </g>
+
+            {/* Bricks */}
+            <g opacity="0.55">
+              <rect
+                x="82"
+                y="310"
+                width="28"
+                height="14"
+                rx="2"
+                fill="#FAC775"
+              />
+              <rect
+                x="112"
+                y="310"
+                width="28"
+                height="14"
+                rx="2"
+                fill="#FAC775"
+              />
+              <rect
+                x="96"
+                y="296"
+                width="28"
+                height="14"
+                rx="2"
+                fill="#EF9F27"
+              />
+              <rect
+                x="82"
+                y="324"
+                width="58"
+                height="14"
+                rx="2"
+                fill="#EF9F27"
+              />
+            </g>
+            <line
+              x1="86"
+              y1="295"
+              x2="102"
+              y2="309"
+              stroke="#888780"
+              strokeWidth="2"
+              strokeLinecap="round"
+              opacity="0.6"
+            />
+            <polygon
+              points="82,291 90,291 102,309 94,309"
+              fill="#B4B2A9"
+              opacity="0.6"
+            />
+
+            {/* Eyebrow */}
+            <text
+              x="340"
+              y="48"
+              textAnchor="middle"
+              fontSize="11"
+              fill="#BA7517"
+              fontWeight="500"
+              letterSpacing="1.5"
+            >
+              AUDIT-READY REPORTING
+            </text>
+          </svg>
+        </div>
       </div>
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "64px 32px",
-        textAlign: "center",
-        gap: 16,
-      }}>
-        <span style={{ fontSize: 48 }}>🚧</span>
-        <h2 style={{ margin: 0 }}>Reports Section is Under Development for Pharmacy</h2>
-        <p style={{ color: "var(--text-muted, #888)", maxWidth: 480, lineHeight: 1.7, margin: 0 }}>
-          We're building comprehensive reports that truly matter to the pharmacist.
-          Thank you for your patience.
-        </p>
-      </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="page-stack">
