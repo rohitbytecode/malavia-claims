@@ -31,6 +31,7 @@ import type {
   CommunicationMedium,
   Role,
   SubmissionMethod,
+  Notification,
 } from "../types/domain";
 const normalized = <T>(
   value:
@@ -102,6 +103,17 @@ export const claimsApi = {
       apiClient.patch(`/claims/${claimId}/bill-breakdown`, { billBreakdown })
     ),
 };
+
+export const notificationApi = {
+  list: (params: { page?: number; limit?: number } = {}) =>
+    unwrap<{ notifications: Notification[]; unreadCount: number }>(
+      apiClient.get("/notifications", { params })
+    ),
+  markRead: (notificationId: string) =>
+    unwrap<Notification>(apiClient.patch(`/notifications/${notificationId}/read`)),
+  markAllRead: () => unwrap<{ success: boolean }>(apiClient.patch("/notifications/read-all")),
+};
+
 export const dashboardApi = {
   metrics: () => unwrap<DashboardMetrics>(apiClient.get("/dashboard/metrics")),
 };

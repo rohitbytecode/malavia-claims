@@ -69,10 +69,8 @@ export class NotificationService {
     performedByName?: string
   ) {
     try {
-      const label = claimNumber ?? claimId;
-      const actor = performedByName ? ` by ${performedByName}` : "";
       const title = "Claim Status Updated";
-      const message = `Claim ${label} status changed to ${toStatus}${actor}`;
+      const message = `Claim status changed to ${toStatus}`;
 
       // 1. Persist notification for every active user
       const users = await UserModel.find(
@@ -88,11 +86,7 @@ export class NotificationService {
         entityId: claimId,
       }));
 
-      if (docs.length) {
-        await Promise.all(
-          docs.map((d) => NotificationRepository.createNotification(d))
-        );
-      }
+      if (docs.length) await NotificationRepository.createManyNotifications(docs);
 
       // 2. Push real-time event via Socket.io
       const io = getIO();
@@ -100,13 +94,14 @@ export class NotificationService {
         claimId,
         claimNumber: claimNumber ?? null,
         toStatus,
+        performedByName: performedByName ?? null,
         title,
         message,
         timestamp: new Date().toISOString(),
       });
 
       logger.info(
-        `Broadcasted claim status change: ${label} → ${toStatus} to ${docs.length} users`
+        `Broadcasted claim status change: ${claimNumber ?? claimId} → ${toStatus} to ${docs.length} users`
       );
     } catch (err) {
       // Notification failures should never block the main flow
