@@ -10,6 +10,18 @@ interface CreateNotificationPayload {
 }
 
 export class NotificationRepository {
+  static async createManyNotifications(payloads: CreateNotificationPayload[]) {
+    return NotificationModel.insertMany(
+      payloads.map((payload) => ({
+        ...payload,
+        userId: new Types.ObjectId(payload.userId),
+        entityId: payload.entityId
+          ? new Types.ObjectId(payload.entityId)
+          : undefined,
+      }))
+    );
+  }
+
   static async createNotification(payload: CreateNotificationPayload) {
     return NotificationModel.create({
       ...payload,

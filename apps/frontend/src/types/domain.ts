@@ -70,6 +70,22 @@ export type AuditModule =
   | "AUTH";
 export type AuditAction = "CREATE" | "UPDATE" | "DELETE" | "STATUS_CHANGE";
 
+
+export type NotificationType = "ALERT" | "REMINDER" | "SYSTEM" | "CLAIM_STATUS";
+
+export interface Notification {
+  _id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  entityId?: string;
+  isRead: boolean;
+  readAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
