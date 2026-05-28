@@ -4,6 +4,7 @@ export enum NotificationType {
   ALERT = "ALERT",
   REMINDER = "REMINDER",
   SYSTEM = "SYSTEM",
+  CLAIM_STATUS = "CLAIM_STATUS",
 }
 
 export interface NotificationDocument extends Document {

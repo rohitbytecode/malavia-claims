@@ -11,6 +11,8 @@ import { ClaimStatus } from "@/modules/claims/constant/claim-status.enum.js";
 import { ClaimType } from "@/modules/claims/constant/claim-type.enum.js";
 import { DepositRepository } from "@/modules/deposits/repository/deposit.repository.js";
 import { RefundStatus } from "@/modules/deposits/constant/refund-status.enum.js";
+import { NotificationService } from "@/modules/notifications/service/notification.service.js";
+import { UserModel } from "@/modules/users/schema/user.schema.js";
 
 interface CreateClaimPayload {
   type: ClaimType;
@@ -307,6 +309,19 @@ export class ClaimService {
             : undefined,
         effectiveAt: new Date(),
       });
+
+      // Broadcast real-time notification (fire-and-forget)
+      let performedByName: string | undefined;
+      if (performedBy && Types.ObjectId.isValid(performedBy)) {
+        const actor = await UserModel.findById(performedBy, { fullName: 1 }).lean();
+        performedByName = actor?.fullName;
+      }
+      NotificationService.broadcastClaimStatusChange(
+        claimId,
+        updatedClaim.claimNumber,
+        toStatus,
+        performedByName
+      );
 
       return toClaimResponse(updatedClaim);
     } catch (error) {
