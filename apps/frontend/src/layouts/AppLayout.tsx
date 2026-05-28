@@ -10,8 +10,12 @@ import {
   operationalRoles,
   pharmacistRoles,
 } from "../constants/workflow";
-import { alertApi } from "../api/services";
-import type { Role } from "../types/domain";
+import { alertApi, notificationApi } from "../api/services";
+import type { Role, Notification } from "../types/domain";
+import { NotificationBell } from "../components/notifications/NotificationBell";
+import { NotificationToast } from "../components/notifications/NotificationToast";
+import { useNotificationStore } from "../store/notification.store";
+import { disconnectSocket, getSocket } from "../lib/socket";
 
 type NavIconName =
   | "dashboard"
@@ -231,6 +235,7 @@ const ROLE_META: Record<Role, { label: string; color: string; abbr: string }> =
 export function AppLayout({ children }: PropsWithChildren) {
   const { user, logout, hasRole } = useAuthStore();
   const { theme, toggleTheme, sidebarCollapsed, toggleSidebar } = useUiStore();
+  const { setNotifications, prependNotification, enqueueToast } = useNotificationStore();
   const navigate = useNavigate();
   const location = useLocation();
   const activeAlerts = useQuery({
@@ -258,6 +263,46 @@ export function AppLayout({ children }: PropsWithChildren) {
       sidebarCollapsed ? "collapsed" : "expanded"
     );
   }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    notificationApi.list({ limit: 30 }).then((res) => {
+      setNotifications(res.notifications);
+    });
+
+    const socket = getSocket();
+    socket.auth = { token: useAuthStore.getState().accessToken };
+    socket.connect();
+
+    const onClaimStatusChanged = (payload: {
+      claimId: string;
+      title: string;
+      message: string;
+      timestamp: string;
+    }) => {
+      const notification: Notification = {
+        _id: `${payload.claimId}-${payload.timestamp}`,
+        userId: user._id,
+        type: "CLAIM_STATUS",
+        title: payload.title,
+        message: payload.message,
+        entityId: payload.claimId,
+        isRead: false,
+        createdAt: payload.timestamp,
+        updatedAt: payload.timestamp,
+      };
+      prependNotification(notification);
+      enqueueToast(notification);
+    };
+
+    socket.on("claim:status-changed", onClaimStatusChanged);
+
+    return () => {
+      socket.off("claim:status-changed", onClaimStatusChanged);
+      disconnectSocket();
+    };
+  }, [enqueueToast, prependNotification, setNotifications, user]);
 
   return (
     <div className="app-shell">
@@ -400,6 +445,7 @@ export function AppLayout({ children }: PropsWithChildren) {
           </div>
 
           <div className="topbar__right">
+            <NotificationBell />
             <div className="topbar__system-badge">
               <span className="topbar__live-dot" />
               <span>Live</span>
@@ -418,6 +464,7 @@ export function AppLayout({ children }: PropsWithChildren) {
 
         {/* Main content */}
         <main className="page-frame">{children}</main>
+        <NotificationToast />
       </div>
     </div>
   );
