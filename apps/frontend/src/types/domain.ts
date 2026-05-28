@@ -72,6 +72,15 @@ export type AuditAction = "CREATE" | "UPDATE" | "DELETE" | "STATUS_CHANGE";
 
 export type NotificationType = "ALERT" | "REMINDER" | "SYSTEM" | "CLAIM_STATUS";
 
+export interface AdvancedNotificationSettings {
+  id: string;
+  notificationEmail: string;
+  isEnabled: boolean;
+  updatedBy?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Notification {
   _id: string;
   userId: string;

@@ -32,6 +32,7 @@ import type {
   Role,
   SubmissionMethod,
   Notification,
+  AdvancedNotificationSettings,
 } from "../types/domain";
 const normalized = <T>(
   value:
@@ -101,6 +102,21 @@ export const claimsApi = {
   updateBillBreakdown: (claimId: string, billBreakdown: BillLineItem[]) =>
     unwrap<Claim>(
       apiClient.patch(`/claims/${claimId}/bill-breakdown`, { billBreakdown })
+    ),
+};
+
+export const advancedNotificationApi = {
+  get: () =>
+    unwrap<AdvancedNotificationSettings | null>(
+      apiClient.get("/advanced-notifications")
+    ),
+  save: (body: {
+    notificationEmail: string;
+    isEnabled?: boolean;
+    updatedBy?: string;
+  }) =>
+    unwrap<AdvancedNotificationSettings>(
+      apiClient.put("/advanced-notifications", body)
     ),
 };
 

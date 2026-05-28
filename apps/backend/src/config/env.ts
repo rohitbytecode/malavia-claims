@@ -23,6 +23,21 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default("*"),
   FRONTEND_URL: z.string().default("http://localhost:3000"),
   RATE_LIMIT_MAX: z.coerce.number().default(100),
+
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_SECURE: z.preprocess(
+    (value) => value === "true" || value === true,
+    z.boolean().default(false)
+  ),
+  SMTP_STARTTLS: z.preprocess(
+    (value) => value === "true" || value === true,
+    z.boolean().default(false)
+  ),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_HELO_HOST: z.string().optional(),
+  MAIL_FROM: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
