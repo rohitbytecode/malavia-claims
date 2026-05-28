@@ -2,11 +2,10 @@
   "extends": "../../packages/ts-config/base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "baseUrl": "./src",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"],
