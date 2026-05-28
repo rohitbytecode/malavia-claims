@@ -12,6 +12,7 @@ import { ClaimType } from "@/modules/claims/constant/claim-type.enum.js";
 import { DepositRepository } from "@/modules/deposits/repository/deposit.repository.js";
 import { RefundStatus } from "@/modules/deposits/constant/refund-status.enum.js";
 import { NotificationService } from "@/modules/notifications/service/notification.service.js";
+import { AdvancedNotificationService } from "@/modules/advanced-notifications/service/advanced-notification.service.js";
 import { UserModel } from "@/modules/users/schema/user.schema.js";
 
 interface CreateClaimPayload {
@@ -324,6 +325,13 @@ export class ClaimService {
         toStatus,
         performedByName
       );
+      AdvancedNotificationService.sendClaimTransitionEmail({
+        claimId,
+        claimNumber: updatedClaim.claimNumber,
+        toStatus,
+        performedByName,
+        remarks,
+      });
 
       return toClaimResponse(updatedClaim);
     } catch (error) {

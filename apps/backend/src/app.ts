@@ -34,6 +34,7 @@ import notificationsRouter from "./modules/notifications/index.js";
 import patientsRouter from "./modules/patients/index.js";
 import doctorsRouter from "./modules/doctors/index.js";
 import payerContractsRouter from "./modules/payer-contracts/index.js";
+import advancedNotificationsRouter from "./modules/advanced-notifications/index.js";
 
 import { setupSwagger } from "./config/swagger.js";
 
@@ -166,6 +167,7 @@ app.use("/api/v1/notifications", notificationsRouter);
 app.use("/api/v1/patients", patientsRouter);
 app.use("/api/v1/doctors", doctorsRouter);
 app.use("/api/v1/payer-contracts", payerContractsRouter);
+app.use("/api/v1/advanced-notifications", advancedNotificationsRouter);
 
 app.use(errorMiddleware);
 

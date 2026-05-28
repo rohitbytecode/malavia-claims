@@ -13,6 +13,7 @@ import { UsersPage } from "../pages/users/UsersPage";
 import { PatientsPage } from "../pages/patients/PatientsPage";
 import { DoctorsPage } from "../pages/doctors/DoctorsPage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
+import { AdvancedNotificationsPage } from "../pages/advanced-notifications/AdvancedNotificationsPage";
 import { AppLayout } from "../layouts/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 import {
@@ -142,6 +143,16 @@ export function AppRoutes() {
           <ProtectedRoute roles={adminRoles}>
             <AppLayout>
               <UsersPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/advanced-notifications"
+        element={
+          <ProtectedRoute roles={["SUPER_ADMIN"]}>
+            <AppLayout>
+              <AdvancedNotificationsPage />
             </AppLayout>
           </ProtectedRoute>
         }

@@ -208,6 +208,13 @@ const NAV_ITEMS: {
     group: "administration",
   },
   {
+    to: "/advanced-notifications",
+    label: "Advanced Notifications",
+    icon: "alerts",
+    roles: ["SUPER_ADMIN"],
+    group: "system",
+  },
+  {
     to: "/settings",
     label: "Settings",
     icon: "settings",
