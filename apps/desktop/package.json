@@ -1,0 +1,54 @@
+{
+  "name": "desktop",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "electron .",
+    "build": "tsc -p tsconfig.json",
+    "package": "pnpm build && electron-builder --win --x64",
+    "lint": "echo \"(todo)\""
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.0.0",
+    "typescript": "^5.9.3",
+    "@types/node": "^25.8.0"
+  },
+  "build": {
+    "appId": "com.claimmanagement.desktop",
+    "productName": "Claim Management",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend/dist",
+        "to": "apps/backend/dist"
+      },
+      {
+        "from": "../frontend/dist",
+        "to": "apps/frontend/dist"
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}
