@@ -85,7 +85,8 @@ class SmtpClient {
       );
     }
 
-    await this.command(`MAIL FROM:${formatAddress(from)}`, [250]);
+    const envelopeFrom = from.match(/<([^>]+)>/)?.[1] ?? from.trim();
+    await this.command(`MAIL FROM:<${envelopeFrom}>`, [250]);
     await this.command(`RCPT TO:${formatAddress(message.to)}`, [250, 251]);
     await this.command("DATA", [354]);
 
@@ -121,9 +122,11 @@ class SmtpClient {
   }
 
   private buildMessage(from: string, message: MailMessage) {
+    const fromHeader = from.includes("<") ? from.trim() : `<${from.trim()}>`;
+
     const headers = [
-      `From: ${formatAddress(escapeHeader(from))}`,
-`To: ${formatAddress(escapeHeader(message.to))}`,
+      `From: ${escapeHeader(fromHeader)}`,
+      `To: ${formatAddress(escapeHeader(message.to))}`,
       `Subject: ${escapeHeader(message.subject)}`,
       "MIME-Version: 1.0",
       message.html
